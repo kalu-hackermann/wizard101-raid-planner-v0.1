@@ -51,7 +51,8 @@ function buildLocalSpellImageUrl(school, spellName) {
   const folderNames = {
     Fire: "Fire  school",
     Balance: "Balance school",
-    Death: "Death school"
+    Death: "Death school",
+    Ice: "Ice school"
   };
 
   const folderName = folderNames[normalizedSchool];
@@ -436,7 +437,6 @@ const offlineSchoolSpellNames = {
     "Reindeer Knight",
     "Winter Moon",
     "Freeze",
-    "Ice Trap",
     "Ice Prism",
     "Ice Armor",
     "Steal Ward",
@@ -446,13 +446,9 @@ const offlineSchoolSpellNames = {
     "Iceblade",
     "Frost Giant",
     "Frozen Armor",
-    "Snow Angel",
-    "Woolly Mammoth",
     "Snow Drift",
     "Cooldown",
     "Freddo",
-    "Lord of Winter",
-    "King Artorius (Ice)",
     "Abominable Weaver",
     "Snowball Barrage",
     "Climaclysm",
@@ -463,34 +459,15 @@ const offlineSchoolSpellNames = {
     "Count Croakula",
     "Shu",
     "The Hierophant",
-    "Dark Weaver",
-    "Snow No Mercy",
-    "Dark Age",
-    "Shadowhorn",
-    "Evil Freeze Ray",
-    "Reverse-Hierophant",
-    "Mark of Shu",
-    "Woe of Shu",
-    "Sokkwi Burn",
     "Burn Trap",
     "Squall Blade",
     "Squall Amplify",
     "Winter Trap",
-    "Winter Fomori",
     "Glacier Amplify",
     "Glacier Blade",
     "Blight Attenuate",
     "Blight Blade",
-    "Avalanche Trap",
-    "Evil Magmaman",
-    "Tempest Wyvern",
-    "Crackling Creeper",
-    "Rockman of Ages",
-    "Mountain Man",
-    "Livin' Wyvern",
-    "Primal Stampede",
-    "Sand Colossus",
-    "Evil Sandman"
+    "Avalanche Trap"
   ],
   Life: [
     "Imp",
@@ -924,7 +901,7 @@ function buildOfflineCardCatalog() {
       const spellName = String(spell.name || "Unknown Spell");
       const type = spell.type || inferSpellType({ titleText: spellName, realName: spellName, internalName: spellName });
       const pips = Number(spell.pips ?? 4);
-      const localImage = ["Fire", "Balance", "Death"].includes(school)
+      const localImage = ["Fire", "Balance", "Death", "Ice"].includes(school)
         ? buildLocalSpellImageUrl(school, spellName)
         : "";
       const image = localImage || (school === "Fire" && fireSpellImageMap[spellName]
