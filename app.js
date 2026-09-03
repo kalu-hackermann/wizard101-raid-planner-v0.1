@@ -50,7 +50,8 @@ function buildLocalSpellImageUrl(school, spellName) {
 
   const folderNames = {
     Fire: "Fire  school",
-    Balance: "Balance school"
+    Balance: "Balance school",
+    Death: "Death school"
   };
 
   const folderName = folderNames[normalizedSchool];
@@ -352,7 +353,6 @@ const offlineSchoolSpellNames = {
     "Monk of Mourning",
     "Pluto's Peril",
     "Ship of Fools",
-    "Death Trap",
     "Deathblade",
     "Death Prism",
     "Sacrifice",
@@ -363,15 +363,11 @@ const offlineSchoolSpellNames = {
     "Plague",
     "Dark Tribute",
     "Empower",
-    "Scarecrow",
     "Virulent Plague",
-    "Skeletal Dragon",
-    "Dr. Von's Monster",
     "Mass Infection",
     "Bad Juju",
     "Malduit",
     "Avenging Fossil",
-    "King Artorius (Death)",
     "Call of Khrulhu",
     "Winged Sorrow",
     "Qismah's Curse",
@@ -382,34 +378,14 @@ const offlineSchoolSpellNames = {
     "Wobbegong Frenzy",
     "Anubis",
     "Mortality",
-    "From Beyond",
-    "Sorrow's Shadow",
-    "Qismah's Wrath",
-    "Dark Hunger",
-    "Grim Irredeemer",
-    "Reverse-Mortality",
-    "Anubis' Bite",
-    "Anubis' Grasp",
-    "Ash Draconian",
     "Ash Trap",
     "Permafrost Trap",
     "Drowned Blade",
     "Drowned Amplify",
     "Extinction Trap",
-    "Extinction's Grasp",
     "Ghost Amplify",
     "Ghost Blade",
-    "Tomb Blade",
-    "Pyre Dragon",
-    "Grave Chill",
-    "Clammy Ghoul",
-    "Joltergeist",
-    "Bleak Forecast",
-    "Bleh the Impaler",
-    "Green Blight",
-    "Venomous Creepers",
-    "Desert Banshee",
-    "Skeletal Raider"
+    "Tomb Blade"
   ],
   Ice: [
     "Frost Beetle",
@@ -948,7 +924,7 @@ function buildOfflineCardCatalog() {
       const spellName = String(spell.name || "Unknown Spell");
       const type = spell.type || inferSpellType({ titleText: spellName, realName: spellName, internalName: spellName });
       const pips = Number(spell.pips ?? 4);
-      const localImage = school === "Fire" || school === "Balance"
+      const localImage = ["Fire", "Balance", "Death"].includes(school)
         ? buildLocalSpellImageUrl(school, spellName)
         : "";
       const image = localImage || (school === "Fire" && fireSpellImageMap[spellName]
