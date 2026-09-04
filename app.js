@@ -52,7 +52,10 @@ function buildLocalSpellImageUrl(school, spellName) {
     Fire: "Fire  school",
     Balance: "Balance school",
     Death: "Death school",
-    Ice: "Ice school"
+    Ice: "Ice school",
+    Life: "Life school",
+    Myth: "Myth school",
+    Storm: "Storm school"
   };
 
   const folderName = folderNames[normalizedSchool];
@@ -521,24 +524,17 @@ const offlineSchoolSpellNames = {
     "Fairy",
     "Pixie",
     "Unicorn",
-    "Nature's Wrath",
     "Life Prism",
     "Sprite Guardian",
     "Lifeblade",
     "Guidance",
-    "Regenerate",
     "Guiding Light",
     "Triage",
     "Dryad",
-    "Forest Lord",
     "Brilliant Light",
-    "Rebirth",
-    "Gnomes!",
     "Mass Triage",
     "Guardian Spirit",
     "Sir Bedevere",
-    "Spinysaur",
-    "King Artorius (Life)",
     "Hungry Caterpillar",
     "Wings of Fate",
     "Lamassu",
@@ -549,33 +545,14 @@ const offlineSchoolSpellNames = {
     "Zand the Bandit",
     "Taweret",
     "The World",
-    "Moody Caterpillar",
-    "Wings of Night",
-    "Delphic Lamassu",
-    "Grim Grrnadier",
-    "Lord of the Wilds",
-    "Reverse-World",
-    "Taweret's Grace",
-    "Taweret's Touch",
-    "Temper Grendel",
     "Temper Trap",
     "Patience Trap",
     "Energy Blade",
     "Energy Attenuate",
     "Memory Trap",
-    "Memory Treant",
     "Soul Attenuate",
     "Soul Blade",
-    "Strength Blade",
-    "Forest Fire",
-    "Taiga King",
-    "Coolest Centaur",
-    "Lord of Lightning",
-    "Heaven's Thunder",
-    "Centaurion",
-    "Gorta Leprechaun",
-    "Desert Lord",
-    "Gnomeostasis!"
+    "Strength Blade"
   ],
   Myth: [
     "Blood Bat",
@@ -636,15 +613,10 @@ const offlineSchoolSpellNames = {
     "Blinding Light",
     "Shatter",
     "Minotaur Minion",
-    "Orthrus",
     "Talos",
-    "Medusa",
-    "Basilisk",
     "Shift",
     "Dimension Shift",
     "Vassanji",
-    "Celestial Calendar",
-    "King Artorius (Myth)",
     "Mystic Colossus",
     "Witch's House Call",
     "Snake Charmer",
@@ -655,16 +627,7 @@ const offlineSchoolSpellNames = {
     "Drop Bear Fury",
     "Thoth",
     "The Emperor",
-    "Cursed Colossus",
-    "Hex House",
-    "Serpent Beguiler",
-    "Tatzlewurm Horror",
-    "Bale Barbarian",
-    "Reverse-Emperor",
-    "Golem: Taunt",
-    "Le Morte Thoth",
-    "Thothic Twist",
-    "Bat of Inspiration",
+    "Golem Taunt",
     "Inspiration Trap",
     "History Trap",
     "Epiphany Blade",
@@ -673,17 +636,7 @@ const offlineSchoolSpellNames = {
     "Creation Blade",
     "Finale Attenuate",
     "Finale Blade",
-    "Fable Trap",
-    "Medusa's Fury",
-    "Blizzotaur",
-    "Coldblood Bat",
-    "Stormin' Gorgon",
-    "Minothor",
-    "Swamp-Clops",
-    "Helpful Bat",
-    "Poisonous Toad",
-    "Sand Troll",
-    "Desert Minotaur"
+    "Fable Trap"
   ],
   Storm: [
     "Thunder Snake",
@@ -901,7 +854,7 @@ function buildOfflineCardCatalog() {
       const spellName = String(spell.name || "Unknown Spell");
       const type = spell.type || inferSpellType({ titleText: spellName, realName: spellName, internalName: spellName });
       const pips = Number(spell.pips ?? 4);
-      const localImage = ["Fire", "Balance", "Death", "Ice"].includes(school)
+      const localImage = ["Fire", "Balance", "Death", "Ice", "Life", "Myth", "Storm"].includes(school)
         ? buildLocalSpellImageUrl(school, spellName)
         : "";
       const image = localImage || (school === "Fire" && fireSpellImageMap[spellName]
