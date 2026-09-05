@@ -1,3 +1,80 @@
+import { auth, db } from "./firebase.js";
+
+import {
+  onAuthStateChanged,
+  signInAnonymously
+} from "firebase/auth";
+
+import {
+  addDoc,
+  collection,
+  doc,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc
+} from "firebase/firestore";
+
+function getOrCreateRaidId() {
+  const url = new URL(window.location.href);
+  let raidId = url.searchParams.get("raid");
+
+  if (!raidId) {
+    raidId = crypto.randomUUID();
+    url.searchParams.set("raid", raidId);
+    window.history.replaceState({}, "", url);
+  }
+
+  return raidId;
+}
+
+const raidId = getOrCreateRaidId();
+const raidDocument = doc(db, "raids", raidId);
+
+let currentUser = null;
+let participantName = localStorage.getItem("wizard101-participant-name") || "";
+let firebaseReady = false;
+let applyingRemoteState = false;
+let saveTimer = null;
+let unsubscribeRaid = null;
+let unsubscribeMessages = null;
+let latestMessages = [];
+
+function askForParticipantName() {
+  while (!participantName.trim()) {
+    participantName =
+      window.prompt("Enter the name other raid members should see:")?.trim() || "";
+  }
+
+  participantName = participantName.slice(0, 30);
+  localStorage.setItem("wizard101-participant-name", participantName);
+}
+
+async function startFirebase() {
+  askForParticipantName();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      try {
+        await signInAnonymously(auth);
+      } catch (error) {
+        console.error("Anonymous login failed:", error);
+        window.alert("Could not connect to the shared planner.");
+      }
+
+      return;
+    }
+
+    currentUser = user;
+    firebaseReady = true;
+
+    subscribeToRaid();
+    subscribeToMessages();
+  });
+}
+
 const schools = ["Storm", "Fire", "Ice", "Life", "Death", "Myth", "Balance"];
 const cardTypes = ["Attack", "Blade", "Trap", "Shield", "Heal", "Utility"];
 
@@ -13,13 +90,13 @@ const schoolPalette = {
 
 function getSchoolLogoSvg(school) {
   const icons = {
-    Fire: "./pictures/icons/Fire school.png",
-    Death: "./pictures/icons/Death school.png",
-    Balance: "./pictures/icons/Balance school.png",
-    Ice: "./pictures/icons/Ice school.png",
-    Storm: "./pictures/icons/Storm school.png",
-    Life: "./pictures/icons/Life school.png",
-    Myth: "./pictures/icons/Myth school.png"
+    Fire: "/pictures/icons/Fire school.png",
+    Death: "/pictures/icons/Death school.png",
+    Balance: "/pictures/icons/Balance school.png",
+    Ice: "/pictures/icons/Ice school.png",
+    Storm: "/pictures/icons/Storm school.png",
+    Life: "/pictures/icons/Life school.png",
+    Myth: "/pictures/icons/Myth school.png"
   };
 
   return icons[school] || icons.Balance;
@@ -61,9 +138,7 @@ function buildLocalSpellImageUrl(school, spellName) {
   const folderName = folderNames[normalizedSchool];
   if (!folderName) return "";
 
-  const safeFolder = encodeURIComponent(folderName);
-  const safeSpellName = encodeURIComponent(normalizedSpellName);
-  return `./pictures/${safeFolder}/${safeSpellName}.png`;
+  return `/pictures/${encodeURIComponent(folderName)}/${encodeURIComponent(normalizedSpellName)}.png`;
 }
 
 function makeSpellImage(card) {
@@ -120,18 +195,6 @@ function handleImageFailure(event, card) {
 }
 
 const spellImageMap = {};
-
-const schoolWikiUrls = {
-  Fire: "https://wiki.wizard101central.com/wiki/Spell:Fire_School_Spells?action=raw",
-  Balance: "https://wiki.wizard101central.com/wiki/Spell:Balance_School_Spells?action=raw",
-  Death: "https://wiki.wizard101central.com/wiki/Spell:Death_School_Spells?action=raw",
-  Ice: "https://wiki.wizard101central.com/wiki/Spell:Ice_School_Spells?action=raw",
-  Life: "https://wiki.wizard101central.com/wiki/Spell:Life_School_Spells?action=raw",
-  Myth: "https://wiki.wizard101central.com/wiki/Spell:Myth_School_Spells?action=raw",
-  Storm: "https://wiki.wizard101central.com/wiki/Spell:Storm_School_Spells?action=raw"
-};
-
-
 
 const offlineSchoolSpellNames = {
   Fire: [
@@ -714,18 +777,6 @@ const offlineSchoolSpellNames = {
   ]
 };
 
-function buildWikiSpellImageUrl(spellName) {
-  const normalized = String(spellName || "")
-    .trim()
-    .replace(/&/g, "and")
-    .replace(/['’]/g, "%27")
-    .replace(/\s+/g, "_")
-    .replace(/-+/g, "_")
-    .replace(/[^A-Za-z0-9_%()!+]/g, "");
-
-  return `https://wiki.wizard101central.com/wiki/File:(Spell)_${normalized}.png`;
-}
-
 function buildWikiFetchFallback(url) {
   if (typeof url !== "string") return url;
   return `https://r.jina.ai/http://${url.replace(/^https?:\/\//i, "")}`;
@@ -930,12 +981,53 @@ function getTeamByPlayerId(playerId) {
   return state.teams.find((team) => team.players.some((player) => player.id === playerId)) || null;
 }
 
-function saveState() {
-  localStorage.setItem("wizard101-raid-planner", JSON.stringify({
-    raidName: state.raidName,
-    teams: state.teams
-  }));
-  window.alert("Raid plan saved locally in this browser.");
+async function saveStateToFirebase() {
+  if (!firebaseReady || !currentUser || applyingRemoteState) {
+    return;
+  }
+
+  try {
+    setSaveStatus("Saving...");
+
+    await setDoc(
+      raidDocument,
+      {
+        raidName: state.raidName,
+        teams: state.teams,
+        updatedAt: serverTimestamp(),
+        updatedBy: {
+          uid: currentUser.uid,
+          name: participantName
+        }
+      },
+      { merge: true }
+    );
+
+    setSaveStatus("Saved");
+  } catch (error) {
+    console.error("Firebase save failed:", error);
+    setSaveStatus("Save failed");
+  }
+}
+
+function scheduleSave() {
+  if (!firebaseReady || applyingRemoteState) {
+    return;
+  }
+
+  window.clearTimeout(saveTimer);
+
+  saveTimer = window.setTimeout(() => {
+    saveStateToFirebase();
+  }, 500);
+}
+
+function setSaveStatus(message) {
+  const status = document.getElementById("save-status");
+
+  if (status) {
+    status.textContent = message;
+  }
 }
 
 function loadSavedState() {
@@ -978,6 +1070,7 @@ function reorderTeams(draggedTeamId, targetTeamId) {
   }
 
   render();
+  scheduleSave();
 }
 
 function getNextAvailableTeamNumber() {
@@ -1004,6 +1097,7 @@ function addTeam() {
   state.activeTeamId = team.id;
   state.selectedPlayerId = team.players[0].id;
   render();
+  scheduleSave();
 }
 
 function removeTeam(teamId) {
@@ -1028,6 +1122,7 @@ function renameTeam(teamId) {
   const trimmed = nextName.trim();
   team.name = trimmed || `Team ${state.teams.indexOf(team) + 1}`;
   render();
+  scheduleSave();
 }
 
 function addPlayerToTeam(teamId) {
@@ -1039,6 +1134,7 @@ function addPlayerToTeam(teamId) {
   state.activeTeamId = team.id;
   state.selectedPlayerId = newPlayer.id;
   render();
+  addPlayerToTeam();
 }
 
 function removePlayerFromTeam(teamId, playerId) {
@@ -1055,6 +1151,7 @@ function removePlayerFromTeam(teamId, playerId) {
   }
 
   render();
+  scheduleSave();
 }
 
 function updatePlayerName(playerId, value) {
@@ -1064,6 +1161,7 @@ function updatePlayerName(playerId, value) {
   team.players = team.players.map((player) =>
     player.id === playerId ? { ...player, name: value || "Player" } : player
   );
+  scheduleSave();
 }
 
 function updatePlayerSchool(playerId, school) {
@@ -1074,6 +1172,7 @@ function updatePlayerSchool(playerId, school) {
     player.id === playerId ? { ...player, school } : player
   );
   render();
+  scheduleSave();
 }
 
 function cyclePlayerSchool(playerId) {
@@ -1096,6 +1195,7 @@ function removeCardFromPlayer(playerId, cardId) {
     player.id === playerId ? { ...player, cards: player.cards.filter((card) => card.id !== cardId) } : player
   );
   render();
+  scheduleSave();
 }
 
 function addCardToPlayer(card) {
@@ -1107,6 +1207,7 @@ function addCardToPlayer(card) {
   );
   state.pickerOpen = false;
   render();
+  scheduleSave();
 }
 
 function renderTeamCard(team) {
@@ -1176,7 +1277,10 @@ function render() {
         </div>
         <div class="top-actions">
           <input class="raid-name" id="raid-name-input" value="${escapeHtml(state.raidName)}" />
-          <button class="primary" id="save-btn">💾 Save</button>
+          <div class="save-area">
+            <span id="save-status" class="save-status">Connecting...</span>
+            <button class="primary" id="save-btn">💾 Save now</button>
+          </div>
         </div>
       </header>
 
@@ -1215,6 +1319,30 @@ function render() {
           </div>
         </main>
       </div>
+      
+      <aside class="chat-panel">
+        <div class="chat-header">
+          <div>
+            <div class="eyebrow">LIVE DISCUSSION</div>
+            <strong id="chat-user-name">${escapeHtml(participantName)}</strong>
+          </div>
+
+          <span class="online-indicator">● Live</span>
+        </div>
+
+        <div id="chat-messages" class="chat-messages"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input
+            id="chat-input"
+            type="text"
+            maxlength="500"
+            autocomplete="off"
+            placeholder="Write a message..."
+          />
+          <button type="submit" class="primary">Send</button>
+        </form>
+      </aside>
 
       ${state.pickerOpen ? `
         <div class="modal-backdrop" id="modal-backdrop">
@@ -1271,10 +1399,13 @@ function render() {
   `;
 
   document.getElementById("raid-name-input")?.addEventListener("input", (event) => {
-    state.raidName = event.target.value;
-  });
+  state.raidName = event.target.value;
+  scheduleSave();
+});
 
-  document.getElementById("save-btn")?.addEventListener("click", saveState);
+  document
+    .getElementById("save-btn")
+    ?.addEventListener("click", saveStateToFirebase);
   document.getElementById("add-team-btn")?.addEventListener("click", addTeam);
   document.getElementById("open-picker-btn")?.addEventListener("click", () => {
     state.pickerOpen = true;
@@ -1448,10 +1579,152 @@ function render() {
       removeCardFromPlayer(playerId, cardId);
     });
   });
+
+  document.getElementById("chat-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const input = document.getElementById("chat-input");
+    if (!input) return;
+
+    const message = input.value;
+    input.value = "";
+
+    try {
+      await sendChatMessage(message);
+    } catch (error) {
+      console.error("Message could not be sent:", error);
+      input.value = message;
+    }
+  });
+
+  renderMessages(latestMessages);
 }
 
-loadSavedState();
+
+function getMessagesCollection() {
+  return collection(db, "raids", raidId, "messages");
+}
+
+async function sendChatMessage(text) {
+  const normalizedText = text.trim();
+
+  if (!currentUser || !normalizedText) {
+    return;
+  }
+
+  await addDoc(getMessagesCollection(), {
+    text: normalizedText.slice(0, 500),
+    authorId: currentUser.uid,
+    authorName: participantName,
+    createdAt: serverTimestamp()
+  });
+}
+
+function subscribeToMessages() {
+  if (unsubscribeMessages) {
+    unsubscribeMessages();
+  }
+
+  const messagesQuery = query(
+    getMessagesCollection(),
+    orderBy("createdAt", "asc"),
+    limit(100)
+  );
+
+  unsubscribeMessages = onSnapshot(
+    messagesQuery,
+    (snapshot) => {
+      latestMessages = snapshot.docs.map((messageDocument) => ({
+        id: messageDocument.id,
+        ...messageDocument.data()
+      }));
+
+      renderMessages(latestMessages);
+    },
+    (error) => {
+      console.error("Chat listener failed:", error);
+    }
+  );
+}
+
+function renderMessages(messages) {
+  const container = document.getElementById("chat-messages");
+  if (!container) return;
+
+  container.innerHTML = messages
+    .map((message) => {
+      const mine = message.authorId === currentUser?.uid;
+
+      return `
+        <div class="chat-message ${mine ? "mine" : ""}">
+          <strong>${escapeHtml(message.authorName || "Anonymous")}</strong>
+          <p>${escapeHtml(message.text || "")}</p>
+        </div>
+      `;
+    })
+    .join("");
+
+  container.scrollTop = container.scrollHeight;
+}
+
+
+function subscribeToRaid() {
+  if (unsubscribeRaid) {
+    unsubscribeRaid();
+  }
+
+  unsubscribeRaid = onSnapshot(
+    raidDocument,
+    async (snapshot) => {
+      if (!snapshot.exists()) {
+        await saveStateToFirebase();
+        return;
+      }
+
+      const savedRaid = snapshot.data();
+
+      applyingRemoteState = true;
+
+      if (typeof savedRaid.raidName === "string") {
+        state.raidName = savedRaid.raidName;
+      }
+
+      if (Array.isArray(savedRaid.teams) && savedRaid.teams.length > 0) {
+        state.teams = savedRaid.teams;
+      }
+
+      const activeTeamStillExists = state.teams.some(
+        (team) => team.id === state.activeTeamId
+      );
+
+      if (!activeTeamStillExists) {
+        state.activeTeamId = state.teams[0]?.id || null;
+      }
+
+      const selectedPlayerStillExists = state.teams.some((team) =>
+        team.players.some(
+          (player) => player.id === state.selectedPlayerId
+        )
+      );
+
+      if (!selectedPlayerStillExists) {
+        const activeTeam = getActiveTeam();
+        state.selectedPlayerId = activeTeam?.players[0]?.id || null;
+      }
+
+      render();
+      applyingRemoteState = false;
+      setSaveStatus("Live");
+    },
+    (error) => {
+      console.error("Raid listener failed:", error);
+      setSaveStatus("Connection failed");
+    }
+  );
+}
+
 (async () => {
   await loadSpellCatalog();
   render();
+  await startFirebase();
 })();
