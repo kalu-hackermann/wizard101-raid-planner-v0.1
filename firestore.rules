@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /raids/{raidId} {
+      allow read, create, update: if request.auth != null;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.authorName is string
+          && request.resource.data.authorName.size() > 0
+          && request.resource.data.authorName.size() <= 30
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500;
+        allow update, delete: if false;
+      }
+
+      match /participants/{participantId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if request.auth != null
+          && request.auth.uid == participantId;
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ import {
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   limit,
   onSnapshot,
@@ -40,20 +41,48 @@ let applyingRemoteState = false;
 let saveTimer = null;
 let unsubscribeRaid = null;
 let unsubscribeMessages = null;
+let unsubscribeParticipants = null;
+let presenceInterval = null;
 let latestMessages = [];
+let connectedParticipants = [];
+let liveStatusTimer = null;
+let changeVersion = 0;
+let saveStatusText = "Connecting…";
+let saveStatusIsLive = false;
 
-function askForParticipantName() {
-  while (!participantName.trim()) {
-    participantName =
-      window.prompt("Enter the name other raid members should see:")?.trim() || "";
-  }
-
-  participantName = participantName.slice(0, 30);
-  localStorage.setItem("wizard101-participant-name", participantName);
+function showWelcomeDialog() {
+  return new Promise((resolve) => {
+    const dialog = document.createElement("div");
+    dialog.className = "welcome-backdrop";
+    dialog.innerHTML = `
+      <form class="welcome-dialog">
+        <div class="welcome-mark">W101</div>
+        <div class="eyebrow">SHARED RAID ROOM</div>
+        <h2>Join the planning table</h2>
+        <p>Choose the name your teammates will see in chat and in the connected-player list.</p>
+        <label for="welcome-name">Display name</label>
+        <input id="welcome-name" maxlength="30" autocomplete="nickname" placeholder="Your wizard name" required />
+        <button class="primary" type="submit">Join raid</button>
+      </form>`;
+    const form = dialog.querySelector("form");
+    const input = dialog.querySelector("input");
+    input.value = participantName;
+    document.body.appendChild(dialog);
+    requestAnimationFrame(() => input.focus());
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = input.value.trim().slice(0, 30);
+      if (!name) return;
+      participantName = name;
+      localStorage.setItem("wizard101-participant-name", participantName);
+      dialog.remove();
+      resolve();
+    });
+  });
 }
 
 async function startFirebase() {
-  askForParticipantName();
+  await showWelcomeDialog();
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -72,6 +101,7 @@ async function startFirebase() {
 
     subscribeToRaid();
     subscribeToMessages();
+    startPresence();
   });
 }
 
@@ -901,27 +931,9 @@ function buildOfflineCardCatalog() {
   return cards;
 }
 
-async function loadSpellCatalog() {
+function loadSpellCatalog() {
   try {
-    console.log("[Spell Loader] Using built-in fallback spell catalog for instant UI loading.");
     sampleCards = buildOfflineCardCatalog();
-
-    if (typeof render === "function") {
-      render();
-    }
-
-    for (const [school, wikiUrl] of Object.entries(schoolWikiUrls)) {
-      try {
-        console.log(`[Spell Loader] Best-effort fetch for ${school} from ${wikiUrl}`);
-        const rawWikiText = await fetchWikiText(wikiUrl);
-        const liveSpellNames = parseSchoolSpellNames(rawWikiText);
-        if (liveSpellNames.length > 0) {
-          console.log(`[Spell Loader] Wiki data loaded for ${school}:`, liveSpellNames);
-        }
-      } catch (error) {
-        console.warn(`[Spell Loader] Wiki fetch failed for ${school}; offline catalog remains active.`, error);
-      }
-    }
   } catch (error) {
     console.error("[Spell Loader] Critical error loading spell catalog:", error);
   }
@@ -954,7 +966,9 @@ const state = {
   query: "",
   school: "All",
   type: "All",
-  draggedTeamId: null
+  draggedTeamId: null,
+  chatOpen: false,
+  chatDraft: ""
 };
 
 state.activeTeamId = state.teams[0].id;
@@ -987,7 +1001,7 @@ async function saveStateToFirebase() {
   }
 
   try {
-    setSaveStatus("Saving...");
+    setSaveStatus("Syncing…");
 
     await setDoc(
       raidDocument,
@@ -1003,7 +1017,7 @@ async function saveStateToFirebase() {
       { merge: true }
     );
 
-    setSaveStatus("Saved");
+    scheduleLiveStatus();
   } catch (error) {
     console.error("Firebase save failed:", error);
     setSaveStatus("Save failed");
@@ -1016,18 +1030,37 @@ function scheduleSave() {
   }
 
   window.clearTimeout(saveTimer);
+  markChanged();
 
   saveTimer = window.setTimeout(() => {
     saveStateToFirebase();
   }, 500);
 }
 
-function setSaveStatus(message) {
+function markChanged() {
+  changeVersion += 1;
+  window.clearTimeout(liveStatusTimer);
+  setSaveStatus("Syncing…");
+}
+
+function scheduleLiveStatus() {
+  const expectedVersion = changeVersion;
+  window.clearTimeout(liveStatusTimer);
+  liveStatusTimer = window.setTimeout(() => {
+    if (expectedVersion === changeVersion) setSaveStatus("Live", true);
+  }, 5000);
+}
+
+function setSaveStatus(message, isLive = false) {
+  saveStatusText = message;
+  saveStatusIsLive = isLive;
   const status = document.getElementById("save-status");
+  const dot = document.getElementById("save-status-dot");
 
   if (status) {
     status.textContent = message;
   }
+  if (dot) dot.classList.toggle("live", isLive);
 }
 
 function reorderTeams(draggedTeamId, targetTeamId) {
@@ -1225,7 +1258,7 @@ function renderTeamCard(team) {
                     <div class="card-slot" style="--school-gradient:${getSchoolGradient(card.school)}; --school-accent:${schoolPalette[card.school]?.accent || '#ffffff'};">
                       <div class="spell-card-wrap">
                         ${shouldShowSchoolBadge(card.image) ? getSchoolBadgeMarkup(card.school) : ""}
-                        <img class="spell-image" src="${card.image}" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
+                        <img class="spell-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
                       </div>
                       <button class="card-remove" data-remove-card="${player.id}|${card.id}">✕</button>
                     </div>
@@ -1262,9 +1295,10 @@ function render() {
         </div>
         <div class="top-actions">
           <input class="raid-name" id="raid-name-input" value="${escapeHtml(state.raidName)}" />
-          <div class="save-area">
-            <span id="save-status" class="save-status">Connecting...</span>
-            <button class="primary" id="save-btn">💾 Save now</button>
+          <button class="secondary copy-link-btn" id="copy-link-btn">⧉ Copy raid link</button>
+          <div class="sync-status" aria-live="polite">
+            <span id="save-status-dot" class="sync-dot ${saveStatusIsLive ? "live" : ""}"></span>
+            <span id="save-status" class="save-status">${escapeHtml(saveStatusText)}</span>
           </div>
         </div>
       </header>
@@ -1289,6 +1323,10 @@ function render() {
               </button>
             `).join("")}
           </div>
+          <div class="participants-panel">
+            <div class="section-title"><span>CONNECTED</span></div>
+            <div id="participant-list" class="participant-list"></div>
+          </div>
         </aside>
 
         <main class="main">
@@ -1305,14 +1343,14 @@ function render() {
         </main>
       </div>
       
-      <aside class="chat-panel">
+      ${state.chatOpen ? `<aside class="chat-panel">
         <div class="chat-header">
           <div>
             <div class="eyebrow">LIVE DISCUSSION</div>
             <strong id="chat-user-name">${escapeHtml(participantName)}</strong>
           </div>
 
-          <span class="online-indicator">● Live</span>
+          <button class="icon-btn" id="close-chat-btn" aria-label="Close chat">✕</button>
         </div>
 
         <div id="chat-messages" class="chat-messages"></div>
@@ -1324,10 +1362,14 @@ function render() {
             maxlength="500"
             autocomplete="off"
             placeholder="Write a message..."
+            value="${escapeHtml(state.chatDraft)}"
           />
           <button type="submit" class="primary">Send</button>
         </form>
-      </aside>
+      </aside>` : ""}
+      <button class="chat-toggle" id="chat-toggle-btn" aria-label="Toggle chat">
+        <span>💬</span><strong>Chat</strong>
+      </button>
 
       ${state.pickerOpen ? `
         <div class="modal-backdrop" id="modal-backdrop">
@@ -1368,7 +1410,7 @@ function render() {
                 <button class="library-card" data-card-id="${card.id}" style="--school-gradient:${getSchoolGradient(card.school)}; --school-accent:${schoolPalette[card.school]?.accent || '#ffffff'};">
                   <div class="library-card-image-wrap">
                     ${shouldShowSchoolBadge(card.image) ? getSchoolBadgeMarkup(card.school) : ""}
-                    <img class="library-image" src="${card.image}" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
+                    <img class="library-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
                   </div>
                   <div class="library-info">
                     <strong>${escapeHtml(card.name)}</strong>
@@ -1388,9 +1430,15 @@ function render() {
   scheduleSave();
 });
 
-  document
-    .getElementById("save-btn")
-    ?.addEventListener("click", saveStateToFirebase);
+  document.getElementById("copy-link-btn")?.addEventListener("click", copyRaidLink);
+  document.getElementById("chat-toggle-btn")?.addEventListener("click", () => {
+    state.chatOpen = !state.chatOpen;
+    render();
+  });
+  document.getElementById("close-chat-btn")?.addEventListener("click", () => {
+    state.chatOpen = false;
+    render();
+  });
   document.getElementById("add-team-btn")?.addEventListener("click", addTeam);
   document.getElementById("open-picker-btn")?.addEventListener("click", () => {
     state.pickerOpen = true;
@@ -1573,21 +1621,91 @@ function render() {
 
     const message = input.value;
     input.value = "";
+    state.chatDraft = "";
 
     try {
       await sendChatMessage(message);
     } catch (error) {
       console.error("Message could not be sent:", error);
       input.value = message;
+      state.chatDraft = message;
     }
+  });
+  document.getElementById("chat-input")?.addEventListener("input", (event) => {
+    state.chatDraft = event.target.value;
   });
 
   renderMessages(latestMessages);
+  renderParticipants();
 }
 
 
 function getMessagesCollection() {
   return collection(db, "raids", raidId, "messages");
+}
+
+async function copyRaidLink() {
+  const button = document.getElementById("copy-link-btn");
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+  } catch {
+    const input = document.createElement("textarea");
+    input.value = window.location.href;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand("copy");
+    input.remove();
+  }
+  if (button) button.textContent = "✓ Link copied";
+  window.setTimeout(() => {
+    if (button?.isConnected) button.textContent = "⧉ Copy raid link";
+  }, 1800);
+}
+
+function participantsCollection() {
+  return collection(db, "raids", raidId, "participants");
+}
+
+async function updatePresence() {
+  if (!currentUser) return;
+  await setDoc(doc(participantsCollection(), currentUser.uid), {
+    uid: currentUser.uid,
+    name: participantName,
+    lastSeen: serverTimestamp()
+  });
+}
+
+function startPresence() {
+  updatePresence().catch(console.error);
+  window.clearInterval(presenceInterval);
+  presenceInterval = window.setInterval(() => updatePresence().catch(console.error), 20000);
+
+  if (unsubscribeParticipants) unsubscribeParticipants();
+  unsubscribeParticipants = onSnapshot(participantsCollection(), (snapshot) => {
+    const cutoff = Date.now() - 45000;
+    connectedParticipants = snapshot.docs
+      .map((entry) => entry.data())
+      .filter((entry) => !entry.lastSeen?.toMillis || entry.lastSeen.toMillis() >= cutoff)
+      .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    renderParticipants();
+  });
+
+  window.addEventListener("beforeunload", () => {
+    if (currentUser) deleteDoc(doc(participantsCollection(), currentUser.uid)).catch(() => {});
+  }, { once: true });
+}
+
+function renderParticipants() {
+  const list = document.getElementById("participant-list");
+  if (!list) return;
+  list.innerHTML = connectedParticipants.length
+    ? connectedParticipants.map((participant) => `
+        <div class="participant">
+          <span class="participant-dot"></span>
+          <span>${escapeHtml(participant.name || "Anonymous")}</span>
+          ${participant.uid === currentUser?.uid ? "<small>You</small>" : ""}
+        </div>`).join("")
+    : '<div class="participants-empty">Connecting…</div>';
 }
 
 async function sendChatMessage(text) {
@@ -1699,7 +1817,8 @@ function subscribeToRaid() {
 
       render();
       applyingRemoteState = false;
-      setSaveStatus("Live");
+      markChanged();
+      scheduleLiveStatus();
     },
     (error) => {
       console.error("Raid listener failed:", error);
@@ -1709,7 +1828,7 @@ function subscribeToRaid() {
 }
 
 (async () => {
-  await loadSpellCatalog();
+  loadSpellCatalog();
   render();
   await startFirebase();
 })();
