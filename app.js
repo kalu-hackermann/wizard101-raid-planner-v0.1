@@ -1676,6 +1676,8 @@ async function updatePresence() {
 }
 
 function startPresence() {
+  connectedParticipants = [{ uid: currentUser.uid, name: participantName, lastSeen: null }];
+  renderParticipants();
   updatePresence().catch(console.error);
   window.clearInterval(presenceInterval);
   presenceInterval = window.setInterval(() => updatePresence().catch(console.error), 20000);
@@ -1688,12 +1690,28 @@ function startPresence() {
       .filter((entry) => !entry.lastSeen?.toMillis || entry.lastSeen.toMillis() >= cutoff)
       .sort((a, b) => String(a.name).localeCompare(String(b.name)));
     renderParticipants();
+  }, (error) => {
+    console.error("Participant presence listener failed:", error);
+    const list = document.getElementById("participant-list");
+    if (list) list.innerHTML = '<div class="participants-empty">Presence unavailable</div>';
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) updatePresence().catch(console.error);
   });
 
   window.addEventListener("beforeunload", () => {
     if (currentUser) deleteDoc(doc(participantsCollection(), currentUser.uid)).catch(() => {});
   }, { once: true });
 }
+
+// Pointer-clicked buttons should not retain focus and activate again when the
+// user later presses Space to scroll or type elsewhere. Keyboard navigation
+// remains unchanged because this only runs after pointer interaction.
+document.addEventListener("pointerup", (event) => {
+  const button = event.target.closest?.("button");
+  if (button) requestAnimationFrame(() => button.blur());
+});
 
 function renderParticipants() {
   const list = document.getElementById("participant-list");
