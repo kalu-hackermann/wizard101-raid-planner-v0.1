@@ -1030,22 +1030,6 @@ function setSaveStatus(message) {
   }
 }
 
-function loadSavedState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("wizard101-raid-planner") || "null");
-    if (!saved) return;
-    if (saved.raidName) state.raidName = saved.raidName;
-    if (saved.teams && saved.teams.length) {
-      const preferredTeams = saved.teams.length > 1 ? [saved.teams[0]] : saved.teams;
-      state.teams = preferredTeams;
-      state.activeTeamId = preferredTeams[0].id;
-      state.selectedPlayerId = preferredTeams[0].players[0]?.id || null;
-    }
-  } catch (error) {
-    console.warn("Failed to load saved raid data", error);
-  }
-}
-
 function reorderTeams(draggedTeamId, targetTeamId) {
   if (!draggedTeamId || !targetTeamId || draggedTeamId === targetTeamId) return;
 
@@ -1110,6 +1094,7 @@ function removeTeam(teamId) {
   }
   state.selectedPlayerId = state.teams[0].players[0]?.id || null;
   render();
+  scheduleSave();
 }
 
 function renameTeam(teamId) {
@@ -1134,7 +1119,7 @@ function addPlayerToTeam(teamId) {
   state.activeTeamId = team.id;
   state.selectedPlayerId = newPlayer.id;
   render();
-  addPlayerToTeam();
+  scheduleSave();
 }
 
 function removePlayerFromTeam(teamId, playerId) {
