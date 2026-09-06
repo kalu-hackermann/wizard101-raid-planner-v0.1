@@ -230,27 +230,46 @@ const spellImageMap = {};
 const offlineSchoolSpellNames = {
   Fire: [
     "Fire Cat",
+    "Fire Cat A",
+    "Fire Cat C",
     "Fire Elf",
+    "Fire Elf A",
+    "Fire Elf C",
     "Glacial Shield",
     "Sunbird",
+    "Sunbird B",
+    "Sunbird C",
     "Fire Trap",
     "Glacial Golem",
+    "Glacial Golem B",
     "Meteor Strike",
+    "Meteor Strike B",
     "Immolate",
+    "Immolate B",
     "Wyldfire",
     "Phoenix",
+    "Phoenix B",
+    "Phoenix C",
     "Naphtha Scarab",
     "Helephant",
+    "Helephant B",
+    "Helephant C",
     "Inferno Salamander",
+    "Inferno Salamander B",
     "Meltdown",
     "Backfire",
     "Fire Dragon",
+    "Fire Dragon B",
     "Efreet",
+    "Efreet B",
     "Jinn's Reversal",
     "Rain of Fire",
+    "Rain of Fire B",
     "Caldera Jinn",
     "Sun Serpent",
+    "Sun Serpent B",
     "King Artorius (Fire)",
+    "King Artorius (Fire) B",
     "Oni's Forge",
     "Infernal Oni",
     "Fire Shield",
@@ -265,43 +284,55 @@ const offlineSchoolSpellNames = {
     "Link",
     "A-Baahh-Calypse",
     "Brimstone Revenant",
+    "Brimstone Revenant B",
     "Burning Rampage",
+    "Burning Rampage B",
     "Fires of Mars",
+    "Fires of Mars B",
     "Hephaestus",
     "Jackall & Hound",
+    "Jackall & Hound B",
     "Krampus",
+    "Krampus B",
     "Nautilus Unleashed",
+    "Nautilus Unleashed B",
     "Whitehart Fire",
+    "Whitehart Fire B",
     "Fireblade",
     "Fire Prism",
     "Link",
     "Steal Charm",
     "Heck Hound",
-    "Immolate",
+    "Heck Hound B",
     "Choke",
     "Fire Elemental",
     "Scald",
     "Fuel",
     "Smoke Screen",
-    "Fire Dragon",
     "Power Link",
-    "Efreet",
-    "Rain of Fire",
     "Detonate",
     "Backdraft",
     "Sir Lamorak",
-    "Sun Serpent",
-    "King Artorius (Fire)",
     "Fire from Above",
+    "Fire from Above B",
     "Raging Bull",
+    "Raging Bull B",
     "Scorching Scimitars",
+    "Scorching Scimitars B",
     "Scion of Fire",
+    "Scion of Fire B",
     "S'more Machine",
+    "S'more Machine B",
     "Blast Off!",
+    "Blast Off! B",
     "Glimpse of Infinity",
+    "Glimpse of Infinity A",
     "Phantasmania!",
+    "Phantasmania! B",
     "Ammut",
+    "Ammut B",
     "The Chariot",
+    "The Chariot B",
     "Mist Trap",
     "Inferno Blade",
     "Inferno Attenuate",
@@ -805,8 +836,160 @@ const offlineSchoolSpellNames = {
     "Typhoon Attenuate",
     "Typhoon Blade",
     "Tornado Blade"
+  ],
+  Shadow: [
+    "Dark Empower",
+    "Dark Fiend",
+    "Dark Nova",
+    "Dark Shepherd",
+    "Dark Surge",
+    "Donate Shadow",
+    "Shadow Sentinel",
+    "Shadow Seraph",
+    "Shadow Shrike",
+    "Shadow Shield",
+    "Shadow Trap",
+    "Shadowblade"
   ]
 };
+
+const offlineSchoolSpellNamesTreasureCards = {
+  Fire: [
+    
+  ],
+  Balance: [
+    
+  ],
+  Death: [
+    
+  ],
+  Ice: [
+    
+  ],
+  Life: [
+    
+  ],
+  Myth: [
+    
+  ],
+  Storm: [
+    
+  ]
+}
+
+const offlineSchoolSpellNamesFusion = {
+  Fire: [
+    ("Ammut's Fury", "Ammut", "Fire Dragon"),
+    ("Ammut's Rage", "Ammut", "Fire Trap"),
+    ("Cryo Cat", "Fire Cat", "Ice Wyvern"),
+    ("Chilly Elf", "Fire Elf", "Thieving Dragon"),
+    ("Lightning Dragon", "Fire Dragon", "Triton"),
+    ("Thunderous Archer", "Fire Elf", "Stormzilla"),
+    ("Bardic Elf", "Fire Elf","Stone Colossus"),
+    ("Living Helephant", "Helephant", "Forest Lord"),
+    ("Dragon Eternal", "Fire Dragon", "Spinysaur"),
+    ("Sun Vulture", "Sunbird", "Dark Sprite"),
+    ("Balaphant", "Helephant", "Scorpion"),
+    ("Dragon Eternal", "Fire Dragon", "Spinysaur"),
+    ("Arid Hound", "Heck hound", "Locust Swarm"),
+    ("Night Raid", "Fire From Above", "Dark Fiend"),
+    ("Wicked Bull", "Raging Bull", "Dark Fiend"),
+    ("Shade Scimitars", "Scorching Scimitars", "Dark Fiend"),
+    ("Tenebrous Trebuchet", "S'more Machine", "Dark Fiend"),
+    ("Into Darkness", "Blast Off!", "Dark Fiend"),
+    ("Reverse-Chariot", "The Chariot", "Dark Fiend")
+  ],
+  Balance: [
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", "")
+  ],
+  Death: [
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", "")
+  ],
+  Ice: [
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", "")
+  ],
+  Life: [
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", "")
+  ],
+  Myth: [
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", "")
+  ],
+  Storm: [
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", ""),
+    ("", "", "")
+  ]
+}
 
 function buildWikiFetchFallback(url) {
   if (typeof url !== "string") return url;
@@ -945,8 +1128,44 @@ function createPlayer(index, school = schools[index % schools.length]) {
     id: `p-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
     name: `Player ${index + 1}`,
     school,
-    cards: []
+    decks: createEmptyDecks()
   };
+}
+
+const deckDefinitions = [
+  { id: "main", name: "Main Deck" },
+  { id: "extra", name: "Extra Deck" },
+  { id: "fusion", name: "Fusion Deck" },
+  { id: "treasure", name: "Treasure Card Deck" }
+];
+
+function createEmptyDecks() {
+  return { main: [], extra: [], fusion: [], treasure: [] };
+}
+
+function groupCards(cards = []) {
+  const grouped = new Map();
+  cards.forEach((entry) => {
+    const card = entry.card || entry;
+    const quantity = Number(entry.quantity || 1);
+    const existing = grouped.get(card.id);
+    if (existing) existing.quantity += quantity;
+    else grouped.set(card.id, { card, quantity });
+  });
+  return [...grouped.values()];
+}
+
+function normalizePlayerDecks(player) {
+  const decks = createEmptyDecks();
+  if (player.decks) {
+    deckDefinitions.forEach(({ id }) => {
+      decks[id] = groupCards(player.decks[id] || []);
+    });
+  } else {
+    decks.main = groupCards(player.cards || []);
+  }
+  const { cards, ...playerWithoutLegacyCards } = player;
+  return { ...playerWithoutLegacyCards, decks };
 }
 
 function createTeam(number) {
@@ -969,7 +1188,9 @@ const state = {
   type: "All",
   draggedTeamId: null,
   chatOpen: false,
-  chatDraft: ""
+  chatDraft: "",
+  selectedDeckId: "main",
+  expandedDecks: {}
 };
 
 state.activeTeamId = state.teams[0].id;
@@ -1229,13 +1450,20 @@ function cyclePlayerSchool(playerId) {
   updatePlayerSchool(playerId, nextSchool);
 }
 
-function removeCardFromPlayer(playerId, cardId) {
+function changeCardQuantity(playerId, deckId, cardId, change) {
   const team = getTeamByPlayerId(playerId);
   if (!team) return;
 
-  team.players = team.players.map((player) =>
-    player.id === playerId ? { ...player, cards: player.cards.filter((card) => card.id !== cardId) } : player
-  );
+  team.players = team.players.map((player) => {
+    if (player.id !== playerId) return player;
+    const decks = { ...player.decks };
+    decks[deckId] = decks[deckId]
+      .map((entry) => entry.card.id === cardId
+        ? { ...entry, quantity: entry.quantity + change }
+        : entry)
+      .filter((entry) => entry.quantity > 0);
+    return { ...player, decks };
+  });
   render();
   scheduleSave();
 }
@@ -1244,12 +1472,62 @@ function addCardToPlayer(card) {
   const team = getTeamByPlayerId(state.selectedPlayerId);
   if (!team) return;
 
-  team.players = team.players.map((player) =>
-    player.id === state.selectedPlayerId ? { ...player, cards: [...player.cards, card] } : player
-  );
+  team.players = team.players.map((player) => {
+    if (player.id !== state.selectedPlayerId) return player;
+    const decks = { ...player.decks };
+    const entries = [...decks[state.selectedDeckId]];
+    const existingIndex = entries.findIndex((entry) => entry.card.id === card.id);
+    if (existingIndex >= 0) {
+      entries[existingIndex] = { ...entries[existingIndex], quantity: entries[existingIndex].quantity + 1 };
+    } else {
+      entries.push({ card, quantity: 1 });
+    }
+    decks[state.selectedDeckId] = entries;
+    return { ...player, decks };
+  });
   state.pickerOpen = false;
   render();
   scheduleSave();
+}
+
+function deckExpansionKey(playerId, deckId) {
+  return `${playerId}:${deckId}`;
+}
+
+function isDeckExpanded(playerId, deckId) {
+  const key = deckExpansionKey(playerId, deckId);
+  return key in state.expandedDecks ? state.expandedDecks[key] : deckId === "main";
+}
+
+function renderPlayerDeck(player, deck) {
+  const expanded = isDeckExpanded(player.id, deck.id);
+  const entries = player.decks[deck.id] || [];
+  const totalCards = entries.reduce((total, entry) => total + entry.quantity, 0);
+  return `
+    <section class="player-deck ${expanded ? "expanded" : "collapsed"}">
+      <button class="deck-header" data-toggle-deck="${player.id}|${deck.id}" aria-expanded="${expanded}">
+        <span>${expanded ? "▾" : "▸"} ${escapeHtml(deck.name)}</span>
+        <strong>${totalCards}</strong>
+      </button>
+      ${expanded ? `
+        <div class="assigned-cards">
+          ${entries.length ? `<div class="card-grid">
+            ${entries.map(({ card, quantity }) => `
+              <div class="card-slot" style="--school-gradient:${getSchoolGradient(card.school)}; --school-accent:${schoolPalette[card.school]?.accent || '#ffffff'};">
+                <div class="spell-card-wrap">
+                  ${shouldShowSchoolBadge(card.image) ? getSchoolBadgeMarkup(card.school) : ""}
+                  <img class="spell-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
+                </div>
+                <div class="quantity-control">
+                  <button data-card-quantity="${player.id}|${deck.id}|${card.id}|-1" aria-label="Remove one ${escapeHtml(card.name)}">−</button>
+                  <strong>×${quantity}</strong>
+                  <button data-card-quantity="${player.id}|${deck.id}|${card.id}|1" aria-label="Add one ${escapeHtml(card.name)}">＋</button>
+                </div>
+              </div>`).join("")}
+          </div>` : ""}
+          <button class="mini-add" data-open-picker-player="${player.id}|${deck.id}">＋ Add Card</button>
+        </div>` : ""}
+    </section>`;
 }
 
 function renderTeamCard(team) {
@@ -1275,22 +1553,8 @@ function renderTeamCard(team) {
               <button class="player-remove" data-remove-player="${team.id}|${player.id}">✕</button>
             </div>
 
-            <div class="assigned-cards">
-              ${player.cards.length > 0 ? `
-                <div class="card-grid">
-                  ${player.cards.map((card) => `
-                    <div class="card-slot" style="--school-gradient:${getSchoolGradient(card.school)}; --school-accent:${schoolPalette[card.school]?.accent || '#ffffff'};">
-                      <div class="spell-card-wrap">
-                        ${shouldShowSchoolBadge(card.image) ? getSchoolBadgeMarkup(card.school) : ""}
-                        <img class="spell-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
-                      </div>
-                      <button class="card-remove" data-remove-card="${player.id}|${card.id}">✕</button>
-                    </div>
-                  `).join("")}
-                </div>
-              ` : ""}
-
-              <button class="mini-add" data-open-picker-player="${player.id}">＋ Add Card</button>
+            <div class="player-decks">
+              ${deckDefinitions.map((deck) => renderPlayerDeck(player, deck)).join("")}
             </div>
           </div>
         `).join("")}
@@ -1401,7 +1665,7 @@ function render() {
             <div class="picker-header">
               <div>
                 <div class="eyebrow">CARD LIBRARY</div>
-                <h2>Select a Spell</h2>
+                <h2>Add to ${escapeHtml(deckDefinitions.find((deck) => deck.id === state.selectedDeckId)?.name || "Deck")}</h2>
               </div>
               <button class="icon-btn" id="close-picker-btn">✕</button>
             </div>
@@ -1600,11 +1864,21 @@ function render() {
 
   document.querySelectorAll("[data-open-picker-player]")?.forEach((element) => {
     element.addEventListener("click", () => {
-      const playerId = element.getAttribute("data-open-picker-player");
+      const [playerId, deckId] = element.getAttribute("data-open-picker-player").split("|");
       const team = getTeamByPlayerId(playerId);
       if (team) state.activeTeamId = team.id;
       state.selectedPlayerId = playerId;
+      state.selectedDeckId = deckId;
       state.pickerOpen = true;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-toggle-deck]")?.forEach((element) => {
+    element.addEventListener("click", () => {
+      const [playerId, deckId] = element.getAttribute("data-toggle-deck").split("|");
+      const key = deckExpansionKey(playerId, deckId);
+      state.expandedDecks[key] = !isDeckExpanded(playerId, deckId);
       render();
     });
   });
@@ -1630,10 +1904,10 @@ function render() {
     });
   });
 
-  document.querySelectorAll("[data-remove-card]")?.forEach((element) => {
+  document.querySelectorAll("[data-card-quantity]")?.forEach((element) => {
     element.addEventListener("click", () => {
-      const [playerId, cardId] = element.getAttribute("data-remove-card").split("|");
-      removeCardFromPlayer(playerId, cardId);
+      const [playerId, deckId, cardId, change] = element.getAttribute("data-card-quantity").split("|");
+      changeCardQuantity(playerId, deckId, cardId, Number(change));
     });
   });
 
@@ -1912,7 +2186,10 @@ function subscribeToRaid() {
       }
 
       if (Array.isArray(savedRaid.teams) && savedRaid.teams.length > 0) {
-        state.teams = savedRaid.teams;
+        state.teams = savedRaid.teams.map((team) => ({
+          ...team,
+          players: team.players.map(normalizePlayerDecks)
+        }));
       }
 
       const activeTeamStillExists = state.teams.some(
