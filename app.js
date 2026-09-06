@@ -878,7 +878,7 @@ const offlineSchoolSpellNames = {
     "Dark Nova",
     "Dark Shepherd",
     "Dark Surge",
-    "Dark Trikster",
+    "Dark Trickster",
     "Donate Shadow",
     "Shadow Sentinel",
     "Shadow Seraph",
