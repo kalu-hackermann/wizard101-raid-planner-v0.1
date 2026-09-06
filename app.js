@@ -8,7 +8,6 @@ import {
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
   limit,
   onSnapshot,
@@ -44,9 +43,11 @@ let unsubscribeMessages = null;
 let unsubscribeParticipants = null;
 let presenceInterval = null;
 let latestMessages = [];
-let connectedParticipants = [];
+let allParticipants = [];
 let liveStatusTimer = null;
 let changeVersion = 0;
+let hasPendingPlannerChanges = false;
+let pendingSaveGeneration = 0;
 let saveStatusText = "Connecting…";
 let saveStatusIsLive = false;
 
@@ -996,9 +997,12 @@ function getTeamByPlayerId(playerId) {
 }
 
 async function saveStateToFirebase() {
+
   if (!firebaseReady || !currentUser || applyingRemoteState) {
     return;
   }
+
+  const generationBeingSaved = pendingSaveGeneration;
 
   try {
     setSaveStatus("Syncing…");
@@ -1017,7 +1021,13 @@ async function saveStateToFirebase() {
       { merge: true }
     );
 
-    scheduleLiveStatus();
+    if (generationBeingSaved === pendingSaveGeneration) {
+      hasPendingPlannerChanges = false;
+      scheduleLiveStatus();
+    } else {
+      postponePendingSave();
+    }
+
   } catch (error) {
     console.error("Firebase save failed:", error);
     setSaveStatus("Save failed");
@@ -1029,12 +1039,26 @@ function scheduleSave() {
     return;
   }
 
+  hasPendingPlannerChanges = true;
+  pendingSaveGeneration += 1;
+
+  postponePendingSave();
+}
+
+function postponePendingSave() {
+  if (!firebaseReady || !hasPendingPlannerChanges) {
+    return;
+  }
+
   window.clearTimeout(saveTimer);
-  markChanged();
+  window.clearTimeout(liveStatusTimer);
+
+  setSaveStatus("Editing…");
+  changeVersion += 1;
 
   saveTimer = window.setTimeout(() => {
     saveStateToFirebase();
-  }, 500);
+  }, 10000);
 }
 
 function markChanged() {
@@ -1324,7 +1348,7 @@ function render() {
             `).join("")}
           </div>
           <div class="participants-panel">
-            <div class="section-title"><span>CONNECTED</span></div>
+            <div class="section-title"><span>PARTICIPANTS</span></div>
             <div id="participant-list" class="participant-list"></div>
           </div>
         </aside>
@@ -1639,6 +1663,16 @@ function render() {
   renderParticipants();
 }
 
+function registerUserActivity() {
+  if (hasPendingPlannerChanges) {
+    postponePendingSave();
+  }
+}
+
+document.addEventListener("input", registerUserActivity, true);
+document.addEventListener("change", registerUserActivity, true);
+document.addEventListener("pointerdown", registerUserActivity, true);
+document.addEventListener("keydown", registerUserActivity, true);
 
 function getMessagesCollection() {
   return collection(db, "raids", raidId, "messages");
@@ -1668,41 +1702,73 @@ function participantsCollection() {
 
 async function updatePresence() {
   if (!currentUser) return;
-  await setDoc(doc(participantsCollection(), currentUser.uid), {
-    uid: currentUser.uid,
-    name: participantName,
-    lastSeen: serverTimestamp()
-  });
+
+  await setDoc(
+    doc(participantsCollection(), currentUser.uid),
+    {
+      uid: currentUser.uid,
+      name: participantName,
+      lastSeen: serverTimestamp()
+    },
+    { merge: true }
+  );
 }
 
 function startPresence() {
-  connectedParticipants = [{ uid: currentUser.uid, name: participantName, lastSeen: null }];
-  renderParticipants();
-  updatePresence().catch(console.error);
-  window.clearInterval(presenceInterval);
-  presenceInterval = window.setInterval(() => updatePresence().catch(console.error), 20000);
+  allParticipants = [
+    {
+      uid: currentUser.uid,
+      name: participantName,
+      lastSeen: null
+    }
+  ];
 
-  if (unsubscribeParticipants) unsubscribeParticipants();
-  unsubscribeParticipants = onSnapshot(participantsCollection(), (snapshot) => {
-    const cutoff = Date.now() - 45000;
-    connectedParticipants = snapshot.docs
-      .map((entry) => entry.data())
-      .filter((entry) => !entry.lastSeen?.toMillis || entry.lastSeen.toMillis() >= cutoff)
-      .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  renderParticipants();
+
+  updatePresence().catch(console.error);
+
+  window.clearInterval(presenceInterval);
+
+  presenceInterval = window.setInterval(() => {
+    updatePresence().catch(console.error);
     renderParticipants();
-  }, (error) => {
-    console.error("Participant presence listener failed:", error);
-    const list = document.getElementById("participant-list");
-    if (list) list.innerHTML = '<div class="participants-empty">Presence unavailable</div>';
-  });
+  }, 20000);
+
+  if (unsubscribeParticipants) {
+    unsubscribeParticipants();
+  }
+
+  unsubscribeParticipants = onSnapshot(
+    participantsCollection(),
+    (snapshot) => {
+      allParticipants = snapshot.docs
+        .map((participantDocument) => ({
+          id: participantDocument.id,
+          ...participantDocument.data()
+        }))
+        .sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""))
+        );
+
+      renderParticipants();
+    },
+    (error) => {
+      console.error("Participant presence listener failed:", error);
+
+      const list = document.getElementById("participant-list");
+
+      if (list) {
+        list.innerHTML =
+          '<div class="participants-empty">Presence unavailable</div>';
+      }
+    }
+  );
 
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) updatePresence().catch(console.error);
+    if (!document.hidden) {
+      updatePresence().catch(console.error);
+    }
   });
-
-  window.addEventListener("beforeunload", () => {
-    if (currentUser) deleteDoc(doc(participantsCollection(), currentUser.uid)).catch(() => {});
-  }, { once: true });
 }
 
 // Pointer-clicked buttons should not retain focus and activate again when the
@@ -1716,14 +1782,49 @@ document.addEventListener("pointerup", (event) => {
 function renderParticipants() {
   const list = document.getElementById("participant-list");
   if (!list) return;
-  list.innerHTML = connectedParticipants.length
-    ? connectedParticipants.map((participant) => `
-        <div class="participant">
-          <span class="participant-dot"></span>
-          <span>${escapeHtml(participant.name || "Anonymous")}</span>
-          ${participant.uid === currentUser?.uid ? "<small>You</small>" : ""}
-        </div>`).join("")
-    : '<div class="participants-empty">Connecting…</div>';
+
+  const onlineLimit = Date.now() - 45000;
+
+  const onlineParticipants = allParticipants.filter((participant) => {
+    if (participant.uid === currentUser?.uid) {
+      return true;
+    }
+
+    const lastSeen = participant.lastSeen?.toMillis?.();
+
+    return typeof lastSeen === "number" && lastSeen >= onlineLimit;
+  });
+
+  const participantMarkup = (participant) => `
+    <div class="participant online">
+      <span class="participant-dot"></span>
+
+      <span title="${escapeHtml(participant.name || "Anonymous")}">
+        ${escapeHtml(participant.name || "Anonymous")}
+      </span>
+
+      ${
+        participant.uid === currentUser?.uid
+          ? "<small>You</small>"
+          : ""
+      }
+    </div>
+  `;
+
+  list.innerHTML = `
+    <div class="presence-group">
+      <div class="presence-group-title">
+        <span>ONLINE</span>
+        <strong>${onlineParticipants.length}</strong>
+      </div>
+
+      ${
+        onlineParticipants.length
+          ? onlineParticipants.map(participantMarkup).join("")
+          : '<div class="participants-empty">Nobody online</div>'
+      }
+    </div>
+  `;
 }
 
 async function sendChatMessage(text) {

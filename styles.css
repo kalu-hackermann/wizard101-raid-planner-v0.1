@@ -717,3 +717,27 @@ h2 {
   .top-actions { flex-wrap: wrap; justify-content: flex-end; }
   .raid-name { width: min(240px, 55vw); }
 }
+
+.presence-group {
+  display: grid;
+  gap: 5px;
+}
+
+.presence-group + .presence-group {
+  margin-top: 16px;
+}
+
+.presence-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 5px;
+  color: #7a879e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.presence-group-title strong {
+  font-size: 11px;
+}
