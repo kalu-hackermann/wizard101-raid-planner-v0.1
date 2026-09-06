@@ -347,31 +347,49 @@ const offlineSchoolSpellNames = {
   ],
   Balance: [
     "Scarab",
+    "Scarab A",
+    "Scarab C",
     "Scorpion",
+    "Scorpion B",
+    "Scorpion C",
     "Weakness",
     "Locust Swarm",
+    "Locust Swarm B",
+    "Locust Swarm C",
     "Sandstorm",
     "Elemental Golem",
     "Gearhead Destroyer",
     "Balance of Power",
     "Spectral Blast",
+    "Spectral Blast B",
+    "Spectral Blast D",
     "Donate Power",
     "Blade Dilution",
     "Trap Dilution",
     "Iron Curse",
+    "Iron Curse B",
+    "Iron Curse C",
     "Hydra",
+    "Hydra B",
+    "Hydra D",
     "Obsidian Colossus",
+    "Obsidian Colossus B",
     "Righting the Scales",
     "Eye of Vigilance",
     "Power Nova",
+    "Power Nova B",
     "Ra",
+    "Ra B",
     "Jinn's Fortune",
     "Chimera",
+    "Chimera B",
     "Duststorm Jinn",
     "Courageous Charge",
     "Spinning Scythe",
     "Sabertooth",
+    "Sabertooth B",
     "King Artorius (Balance)",
+    "King Artorius (Balance) B",
     "Oni's Shadow",
     "Tribunal Oni",
     "Elemental Trap",
@@ -388,17 +406,26 @@ const offlineSchoolSpellNames = {
     "Counterforce",
     "Precision",
     "Brave Sir Badger",
+    "Brave Sir Badger B",
     "Dyvim's Resurgence",
+    "Dyvim's Resurgence B",
     "Loremaster",
+    "Loremaster A",
+    "Loremaster B",
     "Ninja Piglets",
+    "Ninja Piglets B",
+    "Ninja Piglets C",
     "Pops' Knuckles",
+    "Pops' Knuckles B",
     "Samoorai",
     "Savage Paw",
     "Spiritual Tribunal",
+    "Spiritual Tribunal B",
+    "Spiritual Tribunal C",
     "Steal Pip",
     "Terminus' Strike",
+    "Terminus' Strike B",
     "Elemental Shield",
-    "Precision",
     "Spirit Shield",
     "Balanceblade",
     "Black Mantle",
@@ -406,29 +433,35 @@ const offlineSchoolSpellNames = {
     "Helping Hands",
     "Hex",
     "Judgement",
+    "Judgement B",
     "Bladestorm",
     "Elemental Defuse",
     "Spirit Defuse",
     "Spectral Minion",
-    "Power Nova",
     "Availing Hands",
-    "Ra",
-    "Chimera",
     "Mana Burn",
     "Supernova",
     "Nerys",
-    "Sabertooth",
-    "King Artorius (Balance)",
     "Gaze of Fate",
+    "Gaze of Fate B",
     "Nested Fury",
+    "Nested Fury B",
     "Sand Wurm",
+    "Sand Wurm B",
     "Scion of Balance",
+    "Scion of Balance B",
     "Mockenspiel",
+    "Mockenspiel B",
     "Old One's Endgame",
+    "Old One's Endgame B",
     "Scales of Destiny",
+    "Scales of Destiny B",
     "Rainbow Serpent",
+    "Rainbow Serpent B",
     "Chameleon Clash",
+    "Chameleon Clash B",
     "Wheel of Fortune",
+    "Wheel of Fortune B",
     "Heat Trap",
     "Shade Trap",
     "Dust Blade",
@@ -845,6 +878,7 @@ const offlineSchoolSpellNames = {
     "Dark Nova",
     "Dark Shepherd",
     "Dark Surge",
+    "Dark Trikster",
     "Donate Shadow",
     "Shadow Sentinel",
     "Shadow Seraph",
@@ -954,7 +988,96 @@ const fusionRecipes = {
       requires: ["The Chariot", "Dark Fiend"]
     }
   ],
-  Balance: [],
+  Balance: [
+    {
+      result: "Chameleon Cover",
+      requires: ["Chameleon Clash", "Stabilize"]
+    },
+    {
+      result: "Chameleon Mangle",
+      requires: ["Chameleon Clash", "Attenuate"]
+    },
+    {
+      result: "Scorchpion",
+      requires: ["Scorpion", "Phoenix"]
+    },
+    {
+      result: "Frozen Swarm",
+      requires: ["Locust Swarm", "Evil Snowman"]
+    },
+    {
+      result: "Ra-Frigeration",
+      requires: ["Ra", "Frost Beetle"]
+    },
+    {
+      result: "Lightning Locusts",
+      requires: ["Locust Swarm", "Stormzilla"]
+    },
+    {
+      result: "Overloaded Gearhead",
+      requires: ["Gearhead Destroyer", "Storm Shark"]
+    },
+    {
+      result: "Mind Blown!",
+      requires: ["Power Nova", "Minotaur"]
+    },
+    {
+      result: "Foliage Farrago",
+      requires: ["Sandstorm", "Seraph"]
+    },
+    {
+      result: "Savage Sabertooth",
+      requires: ["Sabertooth", "Nature's Wrath"]
+    },
+    {
+      result: "Death Scuttler",
+      requires: ["Scarab", "Banshee"]
+    },
+    {
+      result: "Shadow of Fate",
+      requires: ["Gaze of Fate", "Dark Trickster"]
+    },
+    {
+      result: "Shadow of Fate B",
+      requires: ["Gaze of Fate B", "Dark Trickster"]
+    },
+    {
+      result: "Nested Darkness",
+      requires: ["Nested Fury", "Dark Trickster"]
+    },
+    {
+      result: "Nested Darkness B",
+      requires: ["Nested Fury B", "Dark Trickster"]
+    },
+    {
+      result: "Abyssal Wurm",
+      requires: ["Sand Wurm", "Dark Trickster"]
+    },
+    {
+      result: "Abyssal Wurm B",
+      requires: ["Sand Wurm B", "Dark Trickster"]
+    },
+    {
+      result: "Boxenspiel",
+      requires: ["Mockenspiel", "Dark Trickster"]
+    },
+    {
+      result: "Boxenspiel B",
+      requires: ["Mockenspiel B", "Dark Trickster"]
+    },
+    {
+      result: "Eldritch Checkmate",
+      requires: ["Old One's Endgame", "Dark Trickster"]
+    },
+    {
+      result: "Eldritch Checkmate B",
+      requires: ["Old One's Endgame B", "Dark Trickster"]
+    },
+    {
+      result: "Reverse-Fortune",
+      requires: ["Wheel of Fortune", "Dark Trickster"]
+    }
+  ],
   Death: [],
   Ice: [],
   Life: [],
