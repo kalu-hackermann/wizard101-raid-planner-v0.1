@@ -163,7 +163,8 @@ function buildLocalSpellImageUrl(school, spellName) {
     Ice: "Ice school",
     Life: "Life school",
     Myth: "Myth school",
-    Storm: "Storm school"
+    Storm: "Storm school",
+    Shadow: "Shadow school"
   };
 
   const folderName = folderNames[normalizedSchool];
