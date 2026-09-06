@@ -106,7 +106,7 @@ async function startFirebase() {
   });
 }
 
-const schools = ["Storm", "Fire", "Ice", "Life", "Death", "Myth", "Balance"];
+const schools = ["Storm", "Fire", "Ice", "Life", "Death", "Myth", "Balance", "Shadow"];
 const cardTypes = ["Attack", "Blade", "Trap", "Shield", "Heal", "Utility"];
 
 const schoolPalette = {
@@ -116,7 +116,8 @@ const schoolPalette = {
   Life: { accent: "#9fe79a", glow: "#3ca86d", panel: "#17412e" },
   Death: { accent: "#0d0d0d", glow: "#f5f5f5", panel: "#2a2a2a" },
   Myth: { accent: "#f7d75b", glow: "#4a7ed8", panel: "#1d2a4a" },
-  Balance: { accent: "#d9b98a", glow: "#7e2d2d", panel: "#432422" }
+  Balance: { accent: "#d9b98a", glow: "#7e2d2d", panel: "#432422" },
+  Shadow: { accent: "#8b5cf6", glow: "#d8b4fe", panel: "#1d102d" }
 };
 
 function getSchoolLogoSvg(school) {
@@ -878,119 +879,88 @@ const offlineSchoolSpellNamesTreasureCards = {
   ]
 }
 
-const offlineSchoolSpellNamesFusion = {
+const fusionRecipes = {
   Fire: [
-    ("Ammut's Fury", "Ammut", "Fire Dragon"),
-    ("Ammut's Rage", "Ammut", "Fire Trap"),
-    ("Cryo Cat", "Fire Cat", "Ice Wyvern"),
-    ("Chilly Elf", "Fire Elf", "Thieving Dragon"),
-    ("Lightning Dragon", "Fire Dragon", "Triton"),
-    ("Thunderous Archer", "Fire Elf", "Stormzilla"),
-    ("Bardic Elf", "Fire Elf","Stone Colossus"),
-    ("Living Helephant", "Helephant", "Forest Lord"),
-    ("Dragon Eternal", "Fire Dragon", "Spinysaur"),
-    ("Sun Vulture", "Sunbird", "Dark Sprite"),
-    ("Balaphant", "Helephant", "Scorpion"),
-    ("Dragon Eternal", "Fire Dragon", "Spinysaur"),
-    ("Arid Hound", "Heck hound", "Locust Swarm"),
-    ("Night Raid", "Fire From Above", "Dark Fiend"),
-    ("Wicked Bull", "Raging Bull", "Dark Fiend"),
-    ("Shade Scimitars", "Scorching Scimitars", "Dark Fiend"),
-    ("Tenebrous Trebuchet", "S'more Machine", "Dark Fiend"),
-    ("Into Darkness", "Blast Off!", "Dark Fiend"),
-    ("Reverse-Chariot", "The Chariot", "Dark Fiend")
+    {
+      result: "Ammut's Fury",
+      requires: ["Ammut", "Fire Dragon"]
+    },
+    {
+      result: "Ammut's Rage",
+      requires: ["Ammut", "Fire Trap"]
+    },
+    {
+      result: "Cryo Cat",
+      requires: ["Fire Cat", "Ice Wyvern"]
+    },
+    {
+      result: "Chilly Elf",
+      requires: ["Fire Elf", "Thieving Dragon"]
+    },
+    {
+      result: "Lightning Dragon",
+      requires: ["Fire Dragon", "Triton"]
+    },
+    {
+      result: "Thunderous Archer",
+      requires: ["Fire Elf", "Stormzilla"]
+    },
+    {
+      result: "Bardic Elf",
+      requires: ["Fire Elf", "Stone Colossus"]
+    },
+    {
+      result: "Living Helephant",
+      requires: ["Helephant", "Forest Lord"]
+    },
+    {
+      result: "Dragon Eternal",
+      requires: ["Fire Dragon", "Spinysaur"]
+    },
+    {
+      result: "Sun Vulture",
+      requires: ["Sunbird", "Dark Sprite"]
+    },
+    {
+      result: "Balaphant",
+      requires: ["Helephant", "Scorpion"]
+    },
+    {
+      result: "Arid Hound",
+      requires: ["Heck Hound", "Locust Swarm"]
+    },
+    {
+      result: "Night Raid",
+      requires: ["Fire from Above", "Dark Fiend"]
+    },
+    {
+      result: "Wicked Bull",
+      requires: ["Raging Bull", "Dark Fiend"]
+    },
+    {
+      result: "Shade Scimitars",
+      requires: ["Scorching Scimitars", "Dark Fiend"]
+    },
+    {
+      result: "Tenebrous Trebuchet",
+      requires: ["S'more Machine", "Dark Fiend"]
+    },
+    {
+      result: "Into Darkness",
+      requires: ["Blast Off!", "Dark Fiend"]
+    },
+    {
+      result: "Reverse-Chariot",
+      requires: ["The Chariot", "Dark Fiend"]
+    }
   ],
-  Balance: [
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", "")
-  ],
-  Death: [
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", "")
-  ],
-  Ice: [
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", "")
-  ],
-  Life: [
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", "")
-  ],
-  Myth: [
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", "")
-  ],
-  Storm: [
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", ""),
-    ("", "", "")
-  ]
-}
+  Balance: [],
+  Death: [],
+  Ice: [],
+  Life: [],
+  Myth: [],
+  Storm: []
+};
 
 function buildWikiFetchFallback(url) {
   if (typeof url !== "string") return url;
@@ -1095,9 +1065,7 @@ function buildOfflineCardCatalog() {
       const spellName = String(spell.name || "Unknown Spell");
       const type = spell.type || inferSpellType({ titleText: spellName, realName: spellName, internalName: spellName });
       const pips = Number(spell.pips ?? 4);
-      const localImage = ["Fire", "Balance", "Death", "Ice", "Life", "Myth", "Storm"].includes(school)
-        ? buildLocalSpellImageUrl(school, spellName)
-        : "";
+      const localImage = buildLocalSpellImageUrl(school, spellName);
       const image = localImage || (school === "Fire" && fireSpellImageMap[spellName]
         ? fireSpellImageMap[spellName]
         : (spell.image || getFallbackCardImage({ name: spellName, school, type, pips })));
@@ -1109,6 +1077,33 @@ function buildOfflineCardCatalog() {
         type,
         pips,
         image
+      });
+    });
+  });
+
+  Object.entries(fusionRecipes).forEach(([school, recipes]) => {
+    recipes.forEach((recipe, index) => {
+      const alreadyExists = cards.some(
+        (card) =>
+          card.school === school &&
+          normalizeText(card.name) === normalizeText(recipe.result)
+      );
+
+      if (alreadyExists) return;
+
+      const type = inferSpellType({
+        titleText: recipe.result,
+        realName: recipe.result,
+        internalName: recipe.result
+      });
+
+      cards.push({
+        id: `fusion-${school.toLowerCase()}-${index}-${normalizeText(recipe.result)}`,
+        name: recipe.result,
+        school,
+        type,
+        pips: 0,
+        image: buildLocalSpellImageUrl(school, recipe.result)
       });
     });
   });
@@ -1500,9 +1495,87 @@ function isDeckExpanded(playerId, deckId) {
   return key in state.expandedDecks ? state.expandedDecks[key] : deckId === "main";
 }
 
+function getFusionDeckEntries(player) {
+  const mainDeck = player.decks?.main || [];
+
+  const ownedCards = new Map();
+
+  mainDeck.forEach(({ card, quantity }) => {
+    ownedCards.set(
+      normalizeText(card.name),
+      Number(quantity || 0)
+    );
+  });
+
+  const fusionEntries = [];
+
+  Object.entries(fusionRecipes).forEach(([school, recipes]) => {
+    recipes.forEach((recipe, recipeIndex) => {
+      /*
+       * Count the required copies. This also supports future recipes
+       * that might require two copies of the same spell.
+       */
+      const requiredCounts = new Map();
+
+      recipe.requires.forEach((requiredName) => {
+        const normalizedName = normalizeText(requiredName);
+
+        requiredCounts.set(
+          normalizedName,
+          (requiredCounts.get(normalizedName) || 0) + 1
+        );
+      });
+
+      const possibleQuantities = [...requiredCounts.entries()].map(
+        ([requiredName, requiredQuantity]) => {
+          const ownedQuantity = ownedCards.get(requiredName) || 0;
+
+          return Math.floor(ownedQuantity / requiredQuantity);
+        }
+      );
+
+      const fusionQuantity =
+        possibleQuantities.length > 0
+          ? Math.min(...possibleQuantities)
+          : 0;
+
+      if (fusionQuantity <= 0) return;
+
+      const fusionCard =
+        sampleCards.find(
+          (card) =>
+            card.school === school &&
+            normalizeText(card.name) === normalizeText(recipe.result)
+        ) || {
+          id: `fusion-${school.toLowerCase()}-${recipeIndex}-${normalizeText(recipe.result)}`,
+          name: recipe.result,
+          school,
+          type: inferSpellType({
+            titleText: recipe.result,
+            realName: recipe.result,
+            internalName: recipe.result
+          }),
+          pips: 0,
+          image: buildLocalSpellImageUrl(school, recipe.result)
+        };
+
+      fusionEntries.push({
+        card: fusionCard,
+        quantity: fusionQuantity,
+        requires: recipe.requires
+      });
+    });
+  });
+
+  return fusionEntries;
+}
+
 function renderPlayerDeck(player, deck) {
   const expanded = isDeckExpanded(player.id, deck.id);
-  const entries = player.decks[deck.id] || [];
+  const entries =
+  deck.id === "fusion"
+    ? getFusionDeckEntries(player)
+    : player.decks[deck.id] || [];
   const totalCards = entries.reduce((total, entry) => total + entry.quantity, 0);
   return `
     <section class="player-deck ${expanded ? "expanded" : "collapsed"}">
@@ -1519,14 +1592,47 @@ function renderPlayerDeck(player, deck) {
                   ${shouldShowSchoolBadge(card.image) ? getSchoolBadgeMarkup(card.school) : ""}
                   <img class="spell-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
                 </div>
-                <div class="quantity-control">
-                  <button data-card-quantity="${player.id}|${deck.id}|${card.id}|-1" aria-label="Remove one ${escapeHtml(card.name)}">−</button>
-                  <strong>×${quantity}</strong>
-                  <button data-card-quantity="${player.id}|${deck.id}|${card.id}|1" aria-label="Add one ${escapeHtml(card.name)}">＋</button>
-                </div>
+                ${
+                  deck.id === "fusion"
+                    ? `
+                      <div class="quantity-control fusion-quantity">
+                        <strong>×${quantity}</strong>
+                      </div>
+                    `
+                    : `
+                      <div class="quantity-control">
+                        <button
+                          data-card-quantity="${player.id}|${deck.id}|${card.id}|-1"
+                          aria-label="Remove one ${escapeHtml(card.name)}"
+                        >−</button>
+
+                        <strong>×${quantity}</strong>
+
+                        <button
+                          data-card-quantity="${player.id}|${deck.id}|${card.id}|1"
+                          aria-label="Add one ${escapeHtml(card.name)}"
+                        >＋</button>
+                      </div>
+                    `
+                }
               </div>`).join("")}
           </div>` : ""}
-          <button class="mini-add" data-open-picker-player="${player.id}|${deck.id}">＋ Add Card</button>
+          ${
+            deck.id === "fusion"
+              ? `
+                <div class="derived-deck-note">
+                  Automatically generated from Main Deck
+                </div>
+              `
+              : `
+                <button
+                  class="mini-add"
+                  data-open-picker-player="${player.id}|${deck.id}"
+                >
+                  ＋ Add Card
+                </button>
+              `
+          }
         </div>` : ""}
     </section>`;
 }

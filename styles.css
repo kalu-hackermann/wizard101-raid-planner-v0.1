@@ -804,3 +804,18 @@ h2 {
 .presence-group-title strong {
   font-size: 11px;
 }
+
+.derived-deck-note {
+  padding: 9px 10px;
+  border: 1px dashed #35465e;
+  border-radius: 9px;
+  color: #8292aa;
+  text-align: center;
+  font-size: 11px;
+}
+
+.fusion-quantity {
+  padding-inline: 10px;
+  border-color: rgba(139, 92, 246, 0.55);
+  background: rgba(139, 92, 246, 0.14);
+}s
