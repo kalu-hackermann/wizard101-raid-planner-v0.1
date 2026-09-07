@@ -474,27 +474,46 @@ const offlineSchoolSpellNames = {
   ],
   Death: [
     "Dark Sprite",
+    "Dark Sprite A",
+    "Dark Sprite C",
     "Ghoul",
+    "Ghoul B",
+    "Ghoul C",
     "Dream Shield",
     "Banshee",
+    "Banshee B",
+    "Banshee C",
     "Vampire",
+    "Vampire B",
+    "Vampire C",
     "Dream Golem",
+    "Dream Golem B",
     "Feint",
     "Skeletal Pirate",
+    "Skeletal Pirate B",
+    "Skeletal Pirate C",
     "Doom and Gloom",
     "Deadzone",
     "Crimson Phantom",
     "Wraith",
+    "Wraith B",
+    "Wraith C",
     "Monster Mash",
+    "Monster Mash B", 
     "Putrefaction",
     "Contagion",
     "Scarecrow",
+    "Scarecrow B",
     "Skeletal Dragon",
+    "Skeletal Dragon B",
     "Jinn's Larceny",
     "Dr. Von's Monster",
+    "Dr. Von's Monster B",
     "Macabre Jinn",
     "Avenging Fossil",
+    "Avenging Fossil B",
     "King Artorius (Death)",
+    "King Artorius (Death) B",
     "Oni's Morbidity",
     "Doom Oni",
     "Infection",
@@ -510,18 +529,27 @@ const offlineSchoolSpellNames = {
     "Age of Reckoning",
     "Death Trap",
     "Deer Knight",
+    "Deer Knight B",
     "Headless Horseman",
+    "Headless Horseman B",
+    "Headless Horseman C",
     "Jacques Scratches!",
     "Kiiii-Yaaaa!",
+    "Kiiii-Yaaaa! B",
     "Lord of Night",
+    "Lord of Night B",
     "Monk of Mourning",
+    "Monk of Mourning A",
+    "Monk of Mourning C",
     "Pluto's Peril",
     "Ship of Fools",
+    "Ship of Fools B",
     "Deathblade",
     "Death Prism",
     "Sacrifice",
     "Curse",
     "Poison",
+    "Poison B",
     "Beguile",
     "Animate",
     "Plague",
@@ -532,16 +560,27 @@ const offlineSchoolSpellNames = {
     "Bad Juju",
     "Malduit",
     "Avenging Fossil",
+    "Avenging Fossil B",
     "Call of Khrulhu",
+    "Call of Khrulhu B",
     "Winged Sorrow",
+    "Winged Sorrow B",
     "Qismah's Curse",
+    "Qismah's Curse B",
     "Scion of Death",
+    "Scion of Death B",
     "Snack Attack",
+    "Snack Attack B",
     "Grim Reader",
+    "Grim Reader B",
     "Gravestorm",
+    "Gravestorm B",
     "Wobbegong Frenzy",
+    "Wobbegong Frenzy B",
     "Anubis",
+    "Anubis B",
     "Mortality",
+    "Mortality B",
     "Ash Trap",
     "Permafrost Trap",
     "Drowned Blade",
@@ -1078,7 +1117,101 @@ const fusionRecipes = {
       requires: ["Wheel of Fortune", "Dark Trickster"]
     }
   ],
-  Death: [],
+  Death: [
+    {
+      result: "Anubis' Bite",
+      requires: ["Anubis", "Deathblade"]
+    },
+    {
+      result: "Anubis' Grasp",
+      requires: ["Anubis", "Pathogen"]
+    },
+    {
+      result: "Pyre Dragon",
+      requires: ["Skeletal Dragon", "Helephant"]
+    },
+    {
+      result: "Grave Chill",
+      requires: ["Crimson Phantom", "Frost Beetle"]
+    },
+    {
+      result: "Clammy Ghoul",
+      requires: ["Ghoul", "Colossus"]
+    },
+    {
+      result: "Joltergeist",
+      requires: ["Crimson Phantom", "Kraken"]
+    },
+    {
+      result: "Bleak Forecast",
+      requires: ["Wraith", "Lightning Bats"]
+    },
+    {
+      result: "Bleh the Impaler",
+      requires: ["Vampire", "Blood Bat"]
+    },
+    {
+      result: "Green Blight",
+      requires: ["Banshee", "Centaur"]
+    },
+    {
+      result: "Venomous Creepers",
+      requires: ["Poison", "Leprechaun"]
+    },
+    {
+      result: "Desert Banshee",
+      requires: ["Banshee", "Scarab"]
+    },
+    {
+      result: "Skeletal Raider",
+      requires: ["Skeletal Pirate", "Locust Swarm"]
+    },
+    {
+      result: "From Beyond",
+      requires: ["Call of Khrulhu", "Dark Shepherd"]
+    },
+    {
+      result: "From Beyond B",
+      requires: ["Call of Khrulhu B", "Dark Shepherd"]
+    },
+    {
+      result: "Sorrow's Shadow",
+      requires: ["Winged Sorrow", "Dark Shepherd"]
+    },
+    {
+      result: "Sorrow's Shadow B",
+      requires: ["Winged Sorrow B", "Dark Shepherd"]
+    },
+    {
+      result: "Qismah's Wrath",
+      requires: ["Qismah's Curse", "Dark Shepherd"]
+    },
+    {
+      result: "Qismah's Wrath B",
+      requires: ["Qismah's Curse B", "Dark Shepherd"]
+    },
+    {
+      result: "Dark Hunger",
+      requires: ["Snack Attack", "Dark Shepherd"]
+    },
+    {
+      result: "Dark Hunger B",
+      requires: ["Snack Attack B", "Dark Shepherd"]
+    },
+    {
+      result: "Grim Irredeemer",
+      requires: ["Grim Reader", "Dark Shepherd"]
+    },
+    {
+      result: "Grim Irredeemer B",
+      requires: ["Grim Reader B", "Dark Shepherd"]
+    },
+    {
+      result: "Reverse-Mortality",
+      requires: ["Mortality", "Dark Shepherd"]
+    }
+
+  ],
   Ice: [],
   Life: [],
   Myth: [],
