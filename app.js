@@ -117,7 +117,10 @@ const schoolPalette = {
   Death: { accent: "#0d0d0d", glow: "#f5f5f5", panel: "#2a2a2a" },
   Myth: { accent: "#f7d75b", glow: "#4a7ed8", panel: "#1d2a4a" },
   Balance: { accent: "#d9b98a", glow: "#7e2d2d", panel: "#432422" },
-  Shadow: { accent: "#8b5cf6", glow: "#d8b4fe", panel: "#1d102d" }
+  Shadow: { accent: "#8b5cf6", glow: "#d8b4fe", panel: "#1d102d" },
+  Sun: { accent: "#f6d25c", glow: "#f7d49f", panel: "#8b4f00" },
+  Star: { accent: "#feffba", glow: "#d5ffa6", panel: "#b9b883" },
+  Moon: { accent: "#a1ffff", glow: "#52dafc", panel: "#e7f7fc" }
 };
 
 function getSchoolLogoSvg(school) {
@@ -165,7 +168,10 @@ function buildLocalSpellImageUrl(school, spellName) {
     Life: "Life school",
     Myth: "Myth school",
     Storm: "Storm school",
-    Shadow: "Shadow school"
+    Shadow: "Shadow school",
+    Sun: "Sun school",
+    Star: "Star school",
+    Moon: "Moon school"
   };
 
   const folderName = folderNames[normalizedSchool];
@@ -949,26 +955,51 @@ const offlineSchoolSpellNames = {
     "Tornado Blade"
   ],
   Shadow: [
-    "Dark Empower",
-    "Dark Fiend",
-    "Dark Nova",
-    "Dark Shepherd",
-    "Dark Surge",
-    "Dark Sentinel",
-    "Dark Trickster",
-    "Donate Shadow",
+    "Shadow Fiend",
     "Shadow Sentinel",
-    "Shadow Seraph",
     "Shadow Shrike",
-    "Shadow Shield",
-    "Shadow Trap",
-    "Shadowblade"
-  ],
-  Star: [
-    "",
+    "Shadow Nova",
+    "Shadow Seraph",
+    "Shadow Shepherd",
+    "Shadow Trickster",
+    "Dark Fiend",
+    "Dark Sentinel",
+    "Dark Shrike",
+    "Dark Nova",
+    "Dark Seraph",
+    "Dark Shepherd",
+    "Dark Trickster",
+    "Dark Surge",
+    "Donate Shadow"
   ],
   Sun: [
-    "",
+    "Strong",
+    "Keen Eyes",
+    "Giant",
+    "Accurate",
+    "Sniper",
+    "Monstrous",
+    "Unstoppable",
+    "Gargantuan",
+    "Colossal",
+    "Extraordinary",
+    "Primordial",
+    "Potent Trap",
+    "Sharpened Blade",
+    "Mutate Sprite",
+    "Mutate Swarm",
+    "Mutate Banshee",
+    "Mutate Wyvern",
+    "Mutate Kraken",
+    "Mutate Minotaur",
+    "Mutate Phoenix",
+    "Radical",
+    "Epic",
+    "Aegis",
+    "Indemnity",
+    "Cloak",
+    "Daybreaker",
+    "Nightbringer"
   ],
   Star: [
     "Fortify",
@@ -984,24 +1015,42 @@ const offlineSchoolSpellNames = {
     "Cosmic Charge",
     "Galvanic Field",
     "Furnace", 
-    "Sleet Storm 
-    "Cycle of Life 
-    "Virulence 
+    "Sleet Storm", 
+    "Cycle of Life", 
+    "Virulence", 
     "Reliquary", 
-    "Chastisement 
-    "Punishment 
-    "Devotion 
-    "Brace 
-    "Magnify 
-    "Flawless 
+    "Chastisement", 
+    "Punishment", 
+    "Devotion", 
+    "Brace", 
+    "Magnify", 
+    "Flawless", 
     "Frenzy", 
     "Adapt", 
     "Renew", 
-    "Stabilize 
-    "Conviction", 
+    "Stabilize", 
+    "Conviction" 
   ],
   Moon: [
-    "",
+    "Polymorph Gobbler",
+    "Polymorph Mander",
+    "Polymorph Cat Bandit",
+    "Polymorph Ninja Pig",
+    "Polymorph Draconian",
+    "Polymorph Icehorn",
+    "Polymorph Jaguar",
+    "Polymorph Pteranodon",
+    "Polymorph Treant",
+    "Polymorph Colossus",
+    "Polymorph Elemental (Fire)",
+    "Polymorph Elemental (Storm)",
+    "Shift Grendel",
+    "Shift Piscean",
+    "Shift Thornpaw",
+    "Shift GreenOak",
+    "Shift Dread Paladin",
+    "Shift Ogre",
+    "Shift Sugar Glider"
   ],
 };
 
