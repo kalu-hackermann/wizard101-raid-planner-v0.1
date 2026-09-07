@@ -592,28 +592,46 @@ const offlineSchoolSpellNames = {
   ],
   Ice: [
     "Frost Beetle",
+    "Frost Beetle A",
+    "Frost Beetle C",
     "Snow Serpent",
+    "Snow Serpent B",
+    "Snow Serpent C",
     "Volcanic Shield",
     "Evil Snowman",
+    "Evil Snowman B",
+    "Evil Snowman C",
     "Tower Shield",
     "Volcanic Golem",
+    "Volcanic Golem B",
     "Ice Wyvern",
     "Blizzard",
+    "Blizzard B",
     "Balefrost",
     "Blight Hound",
+    "Blight Hound B",
+    "Blight Hound C",
     "Thieving Dragon",
+    "Thieving Dragon B",
     "Colossus",
+    "Colossus B",
+    "Colossus C",
     "Frostfeather",
     "Wall of Blades",
     "Glacial Fortress",
     "Frost Giant",
+    "Frost Giant B",
     "Snow Angel",
+    "Snow Angel B",
     "Jinn's Vexation",
     "Woolly Mammoth",
+    "Woolly Mammoth B",
     "Iceburn Jinn",
     "Impair",
     "Lord of Winter",
+    "Lord of Winter B",
     "King Artorius (Ice)",
+    "King Artorius (Ice) B",
     "Oni's Destruction",
     "Everwinter Oni",
     "Stun Block",
@@ -630,14 +648,24 @@ const offlineSchoolSpellNames = {
     "Katabatic Wind",
     "Ice Trap",
     "Angry Snowpig",
+    "Angry Snowpig B",
     "Celestial Intervention",
+    "Celestial Intervention B",
     "Deermouse Trap",
+    "Deermouse Trap B",
     "Handsome Fomori",
+    "Handsome Fomori B",
     "Ice Elemental",
+    "Ice Elemental B",
     "Neptune's Fury",
+    "Neptune's Fury B",
     "Ratstabber",
+    "Ratstabber B",
     "Reindeer Knight",
+    "Reindeer Knight B",
     "Winter Moon",
+    "Winter Moon B",
+    "Winter Moon C",
     "Freeze",
     "Ice Prism",
     "Ice Armor",
@@ -646,21 +674,30 @@ const offlineSchoolSpellNames = {
     "Ice Guardian",
     "Legion Shield",
     "Iceblade",
-    "Frost Giant",
     "Frozen Armor",
     "Snow Drift",
     "Cooldown",
     "Freddo",
     "Abominable Weaver",
+    "Abominable Weaver B",
     "Snowball Barrage",
+    "Snowball Barrage B",
     "Climaclysm",
+    "Climaclysm B",
     "Scion of Ice",
+    "Scion of Ice B",
     "Shatterhorn",
+    "Shatterhorn B",
     "Freeze Ray",
+    "Freeze Ray B",
     "Deathly Depths",
+    "Deathly Depths A",
     "Count Croakula",
+    "Count Croakula B",
     "Shu",
+    "Shu B",
     "The Hierophant",
+    "The Hierophant B",
     "Burn Trap",
     "Squall Blade",
     "Squall Amplify",
@@ -917,6 +954,7 @@ const offlineSchoolSpellNames = {
     "Dark Nova",
     "Dark Shepherd",
     "Dark Surge",
+    "Dark Sentinel",
     "Dark Trickster",
     "Donate Shadow",
     "Shadow Sentinel",
@@ -925,7 +963,46 @@ const offlineSchoolSpellNames = {
     "Shadow Shield",
     "Shadow Trap",
     "Shadowblade"
-  ]
+  ],
+  Star: [
+    "",
+  ],
+  Sun: [
+    "",
+  ],
+  Star: [
+    "Fortify",
+    "Amplify",
+    "Pathogen",
+    "Infallible",
+    "Attenuate",
+    "Starfall",
+    "Vengeance",
+    "Empowerment", 
+    "Berserk",
+    "Mend", 
+    "Cosmic Charge",
+    "Galvanic Field",
+    "Furnace", 
+    "Sleet Storm 
+    "Cycle of Life 
+    "Virulence 
+    "Reliquary", 
+    "Chastisement 
+    "Punishment 
+    "Devotion 
+    "Brace 
+    "Magnify 
+    "Flawless 
+    "Frenzy", 
+    "Adapt", 
+    "Renew", 
+    "Stabilize 
+    "Conviction", 
+  ],
+  Moon: [
+    "",
+  ],
 };
 
 const offlineSchoolSpellNamesTreasureCards = {
@@ -1212,7 +1289,96 @@ const fusionRecipes = {
     }
 
   ],
-  Ice: [],
+  Ice: [
+    {
+      result: "Mark of Shu",
+      requires: ["Shu", "Ice Trap"]
+    },
+    {
+      result: "Woe of Shu",
+      requires: ["Shu", "Weakness"]
+    },
+    {
+      result: "Evil Magmaman",
+      requires: ["Evil Snowman", "Fire Elf"]
+    },
+    {
+      result: "Tempest Wyvern",
+      requires: ["Ice Wyvern", "Stormzilla"]
+    },
+    {
+      result: "Crackling Creeper",
+      requires: ["Frost Beetle", "Triton"]
+    },
+    {
+      result: "Rockman of Ages",
+      requires: ["Colosssus", "Stone Colossus"]
+    },
+    {
+      result: "Mountain Man",
+      requires: ["Colossus", "Leprechaun"]
+    },
+    {
+      result: "Livin' Wyvern",
+      requires: ["Ice Wyvern", "Seraph"]
+    },
+    {
+      result: "Primal Stampede",
+      requires: ["Woolly Mammoth", "Skeletal Pirate"]
+    },
+    {
+      result: "Sand Colossus",
+      requires: ["Colossus", "Scarab"]
+    },
+    {
+      result: "Evil Sandman",
+      requires: ["Evil Snowman", "Scarab"]
+    },
+    {
+      result: "Dark Weaver",
+      requires: ["Abominable Weaver", "Dark Sentinel"]
+    },
+    {
+      result: "Dark Weaver B",
+      requires: ["Abominable Weaver B", "Dark Sentinel"]
+    },
+    {
+      result: "Snow No Mercy",
+      requires: ["Snowball Barrage", "Dark Sentinel"]
+    },
+    {
+      result: "Snow No Mercy B",
+      requires: ["Snowball Barrage B", "Dark Sentinel"]
+    },
+    {
+      result: "Dark Age",
+      requires: ["Climaclysm", "Dark Sentinel"]
+    },
+    {
+      result: "Dark Age B",
+      requires: ["Climaclysm B", "Dark Sentinel"]
+    },
+    {
+      result: "Shadowhorn",
+      requires: ["Shatterhorn", "Dark Sentinel"]
+    },
+    {
+      result: "Shadowhorn B",
+      requires: ["Shatterhorn B", "Dark Sentinel"]
+    },
+    {
+      result: "Evil Freeze Ray",
+      requires: ["Freeze Ray", "Dark Sentinel"]
+    },
+    {
+      result: "Evil Freeze Ray B",
+      requires: ["Freeze Ray B", "Dark Sentinel"]
+    },
+    {
+      result: "Reverse-Hierophant",
+      requires: ["The Hierophant", "Dark Sentinel"]
+    }
+  ],
   Life: [],
   Myth: [],
   Storm: []
