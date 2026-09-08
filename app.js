@@ -716,31 +716,52 @@ const offlineSchoolSpellNames = {
   ],
   Life: [
     "Imp",
+    "Imp A",
+    "Imp C",
     "Leprechaun",
+    "Leprechaun B",
+    "Leprechaun C",
     "Legend Shield",
     "Sprite",
     "Nature's Wrath",
+    "Nature's Wrath B",
+    "Nature's Wrath C",
     "Spirit Armor",
     "Legend Golem",
+    "Legend Golem B",
     "Seraph",
+    "Seraph B",
+    "Seraph C",
     "Satyr",
     "Hunting Wyrm",
     "Regenerate",
+    "Regenerate B",
     "Earth Walker",
+    "Earth Walker B",
+    "Earth Walker C",
     "Centaur",
+    "Centaur B",
+    "Centaur C",
     "Sanctuary",
     "Circle of Thorns",
     "Infestation",
+    "Infestation B",
     "Sprite Swarm",
+    "Sprite Swarm B",
     "Tranquility",
     "Meditation",
     "Forest Lord",
+    "Forest Lord B",
     "Rebirth",
+    "Rebirth B",
     "Jinn's Affliction",
     "Verdurous Jinn",
     "Gnomes!",
+    "Gnomes! B",
     "Spinysaur",
+    "Spinysaur B",
     "King Artorius (Life)",
+    "King Artorius (Life) B",
     "Oni's Naturalism",
     "Primal Oni",
     "Life Shield",
@@ -754,13 +775,21 @@ const offlineSchoolSpellNames = {
     "Lifespear",
     "Namaste",
     "Burrowing Bane",
+    "Burrowing Bane B",
     "Camp Bandit",
+    "Camp Bandit B",
     "Goat Monk",
+    "Goat Monk A",
     "Luminous Weaver",
+    "Luminous Weaver B",
+    "Luminous Weaver C",
     "Phoebus' Will",
     "Pigsie",
+    "Pigsie A",
     "Sacred Charge",
+    "Sacred Charge B",
     "Ratatoskr's Spin",
+    "Ratatoskr's Spin B",
     "Whiplash",
     "Minor Blessing",
     "Fairy",
@@ -778,14 +807,23 @@ const offlineSchoolSpellNames = {
     "Guardian Spirit",
     "Sir Bedevere",
     "Hungry Caterpillar",
+    "Hungry Caterpillar B",
     "Wings of Fate",
+    "Wings of Fate B",
     "Lamassu",
+    "Lamassu B",
     "Scion of Life",
+    "Scion of Life B",
     "Grrnadier",
+    "Grrnadier B",
     "Lord of the Jungle",
+    "Lord of the Jungle B",
     "Starspawn",
+    "Starspawn A",
     "Zand the Bandit",
+    "Zand the Bandit B",
     "Taweret",
+    "Taweret B",
     "The World",
     "Temper Trap",
     "Patience Trap",
@@ -1428,7 +1466,96 @@ const fusionRecipes = {
       requires: ["The Hierophant", "Dark Sentinel"]
     }
   ],
-  Life: [],
+  Life: [
+    {
+      result: "Taweret's Grace",
+      requires: ["Taweret", "Devotion"]
+    },
+    {
+      result: "Taweret's Touch",
+      requires: ["Taweret", "Regenerate"]
+    },
+    {
+      result: "Forest Fire",
+      requires: ["Nature's Wrath", "Helephant"]
+    },
+    {
+      result: "Taiga King",
+      requires: ["Forest Lord", "Evil Snowman"]
+    },
+    {
+      result: "Coolest Centaur",
+      requires: ["Centaur", "Evil Snowman"]
+    },
+    {
+      result: "Lord of Lightning",
+      requires: ["Forest Lord", "Lightning bats"]
+    },
+    {
+      result: "Heaven's Thunder",
+      requires: ["Seraph", "Triton"]
+    },
+    {
+      result: "Centaurion",
+      requires: ["Centaur", "Minotaur"]
+    },
+    {
+      result: "Gorta Leprechaun",
+      requires: ["Leprechaun", "Banshee"]
+    },
+    {
+      result: "Desert Lord",
+      requires: ["Forest Lord", "Locust Swarm"]
+    },
+    {
+      result: "Gnomeostasis!",
+      requires: ["Gnomes!", "Chimera"]
+    },
+    {
+      result: "Moody Caterpillar",
+      requires: ["Hungry Caterpillar", "Dark Seraph"]
+    },
+    {
+      result: "Moody Caterpillar B",
+      requires: ["Hungry Caterpillar B", "Dark Seraph"]
+    },
+    {
+      result: "Wings of Night",
+      requires: ["Wings of Fate", "Dark Seraph"]
+    },
+    {
+      result: "Wings of Night B",
+      requires: ["Wings of Fate B", "Dark Seraph"]
+    },
+    {
+      result: "Delphic Lamassu",
+      requires: ["Lamassu", "Dark Seraph"]
+    },
+    {
+      result: "Delphic Lamassu B",
+      requires: ["Lamassu B", "Dark Seraph"]
+    },
+    {
+      result: "Grim Grrnadier",
+      requires: ["Grrnadier", "Dark Seraph"]
+    },
+    {
+      result: "Grim Grrnadier B",
+      requires: ["Grrnadier B", "Dark Seraph"]
+    },
+    {
+      result: "Lord of the Wilds",
+      requires: ["Lord of the Jungle", "Dark Seraph"]
+    },
+    {
+      result: "Lord of the Wilds B",
+      requires: ["Lord of the Jungle B", "Dark Seraph"]
+    },
+    {
+      result: "Reverse-World",
+      requires: ["The World", "Dark Seraph"]
+    },
+  ],
   Myth: [],
   Storm: []
 };
