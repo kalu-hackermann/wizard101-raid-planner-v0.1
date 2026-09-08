@@ -106,8 +106,17 @@ async function startFirebase() {
   });
 }
 
-const schools = ["Storm", "Fire", "Ice", "Life", "Death", "Myth", "Balance", "Shadow"];
-const cardTypes = ["Attack", "Blade", "Trap", "Shield", "Heal", "Utility"];
+const schools = ["Storm", "Fire", "Ice", "Life", "Death", "Myth", "Balance", "Shadow","Sun","Star","Moon"];
+const cardTypes = [
+  "Buffs and debuffs",
+  "Shields",
+  "Traps",
+  "Field spells",
+  "DOTs",
+  "Area of Effect (AOE)",
+  "Single target spells",
+  "Heals"
+];
 
 const schoolPalette = {
   Storm: { accent: "#7f5af0", glow: "#f4d35e", panel: "#241b45" },
@@ -237,6 +246,10 @@ const spellImageMap = {};
 
 const offlineSchoolSpellNames = {
   Fire: [
+    {
+      name: "Fire Cat",
+      categories:["Single target spells"]
+    },
     "Fire Cat",
     "Fire Cat A",
     "Fire Cat C",
@@ -1554,11 +1567,30 @@ const fusionRecipes = {
     {
       result: "Reverse-World",
       requires: ["The World", "Dark Seraph"]
-    },
+    }
   ],
   Myth: [],
   Storm: []
 };
+
+const fusionSpellKeys = new Set(
+  Object.entries(fusionRecipes).flatMap(([school, recipes]) =>
+    recipes
+      .filter(
+        (recipe) =>
+          recipe &&
+          typeof recipe.result === "string" &&
+          Array.isArray(recipe.requires)
+      )
+      .map((recipe) => `${school}:${normalizeText(recipe.result)}`)
+  )
+);
+
+function isFusionSpell(card) {
+  return fusionSpellKeys.has(
+    `${card.school}:${normalizeText(card.name)}`
+  );
+}
 
 function buildWikiFetchFallback(url) {
   if (typeof url !== "string") return url;
@@ -1614,15 +1646,120 @@ function formatSpellDisplayName(rawName) {
 
 let sampleCards = [];
 
-function inferSpellType(card) {
-  const text = String(card.titleText || card.realName || card.internalName || "").toLowerCase();
+const spellCategoryOverrides = {
+  // Buffs and debuffs
+  "dark pact": ["Buffs and debuffs"],
+  "balanceblade": ["Buffs and debuffs"],
+  "elemental blade": ["Buffs and debuffs"],
+  "spirit blade": ["Buffs and debuffs"],
+  "weakness": ["Buffs and debuffs"],
+  "bad juju": ["Buffs and debuffs"],
 
-  if (/shield|ward|armor|aurora/.test(text)) return "Shield";
-  if (/blade|strike|slash|cut/.test(text)) return "Blade";
-  if (/heal|mend|restore|repair/.test(text)) return "Heal";
-  if (/trap|snare|hex/.test(text)) return "Trap";
-  if (/summon|boost|buff|power|prism|sleet|tide|gust|gift/.test(text)) return "Utility";
-  return "Attack";
+  // Shields
+  "tower shield": ["Shields"],
+  "legion shield": ["Shields"],
+  "volcanic shield": ["Shields"],
+  "thermic shield": ["Shields"],
+
+  // Traps
+  "feint": ["Traps"],
+  "mass feint": ["Traps"],
+  "elemental trap": ["Traps"],
+  "spirit trap": ["Traps"],
+  "curse": ["Traps"],
+  "hex": ["Traps"],
+
+  // Field spells
+  "wyldfire": ["Field spells"],
+  "darkwind": ["Field spells"],
+  "balefrost": ["Field spells"],
+  "sanctuary": ["Field spells"],
+  "doom and gloom": ["Field spells"],
+  "time of legend": ["Field spells"],
+
+  // Multiple-category examples
+  "fire dragon": ["DOTs", "Area of Effect (AOE)"],
+  "scald": ["DOTs", "Area of Effect (AOE)"],
+  "rain of fire": ["DOTs", "Area of Effect (AOE)"],
+  "heck hound": ["DOTs", "Single target spells"],
+
+  // AOE attacks
+  "meteor strike": ["Area of Effect (AOE)"],
+  "raging bull": ["Area of Effect (AOE)"],
+  "storm lord": ["Area of Effect (AOE)"],
+  "frost giant": ["Area of Effect (AOE)"],
+  "forest lord": ["Area of Effect (AOE)"],
+
+  // Single-target attacks
+  "fire cat": ["Single target spells"],
+  "sunbird": ["Single target spells"],
+  "helephant": ["Single target spells"],
+  "kraken": ["Single target spells"],
+  "stormzilla": ["Single target spells"],
+
+  // Heals
+  "satyr": ["Heals"],
+  "fairy": ["Heals"],
+  "pixie": ["Heals"],
+  "rebirth": ["Heals", "Area of Effect (AOE)"],
+  "unicorn": ["Heals", "Area of Effect (AOE)"]
+};
+
+function inferSpellCategories(card) {
+  const name = normalizeText(
+    card.name ||
+    card.titleText ||
+    card.realName ||
+    card.internalName ||
+    ""
+  );
+
+  const explicitCategories = spellCategoryOverrides[name];
+
+  if (explicitCategories) {
+    return explicitCategories;
+  }
+
+  if (/trap|hex|feint|curse|jinx|snare/.test(name)) {
+    return ["Traps"];
+  }
+
+  if (/shield|ward|armor/.test(name)) {
+    return ["Shields"];
+  }
+
+  if (
+    /blade|weakness|plague|infection|precision|amplify|fortify|brace|frenzy|berserk/.test(name)
+  ) {
+    return ["Buffs and debuffs"];
+  }
+
+  if (/heal|healing|regenerate/.test(name)) {
+    return ["Heals"];
+  }
+
+  // Unknown cards remain available under "All".
+  return [];
+}
+
+function getCardCategories(card) {
+  if (Array.isArray(card.categories)) {
+    return card.categories;
+  }
+
+  // Compatibility with cards previously saved in Firebase.
+  const legacyTypeMap = {
+    Blade: "Buffs and debuffs",
+    Shield: "Shields",
+    Trap: "Traps",
+    Heal: "Heals"
+  };
+
+  if (card.type && legacyTypeMap[card.type]) {
+    return [legacyTypeMap[card.type]];
+  }
+
+  return inferSpellCategories(card);
 }
 
 function parseSchoolSpellNames(rawWikiText) {
@@ -1661,18 +1798,18 @@ function buildOfflineCardCatalog() {
     spellEntries.forEach((entry, index) => {
       const spell = typeof entry === "string" ? { name: entry } : entry;
       const spellName = String(spell.name || "Unknown Spell");
-      const type = spell.type || inferSpellType({ titleText: spellName, realName: spellName, internalName: spellName });
+      const categories = Array.isArray(spell.categories)? spell.categories: inferSpellCategories({ name: spellName });
       const pips = Number(spell.pips ?? 4);
       const localImage = buildLocalSpellImageUrl(school, spellName);
       const image = localImage || (school === "Fire" && fireSpellImageMap[spellName]
         ? fireSpellImageMap[spellName]
-        : (spell.image || getFallbackCardImage({ name: spellName, school, type, pips })));
+        : (spell.image || getFallbackCardImage({ name: spellName, school, type: categories[0] || "Other", pips })));
 
       cards.push({
         id: `offline-${school.toLowerCase()}-${index}-${spellName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
         name: spellName,
         school,
-        type,
+        categories,
         pips,
         image
       });
@@ -1680,7 +1817,13 @@ function buildOfflineCardCatalog() {
   });
 
   Object.entries(fusionRecipes).forEach(([school, recipes]) => {
-    recipes.forEach((recipe, index) => {
+    recipes.filter(
+      (recipe) =>
+        recipe &&
+        typeof recipe.result === "string" &&
+        recipe.result.trim() &&
+        Array.isArray(recipe.requires)
+    ).forEach((recipe, index) => {
       const alreadyExists = cards.some(
         (card) =>
           card.school === school &&
@@ -1689,17 +1832,15 @@ function buildOfflineCardCatalog() {
 
       if (alreadyExists) return;
 
-      const type = inferSpellType({
-        titleText: recipe.result,
-        realName: recipe.result,
-        internalName: recipe.result
+      const categories = inferSpellCategories({
+        name: recipe.result
       });
 
       cards.push({
         id: `fusion-${school.toLowerCase()}-${index}-${normalizeText(recipe.result)}`,
         name: recipe.result,
         school,
-        type,
+        categories,
         pips: 0,
         image: buildLocalSpellImageUrl(school, recipe.result)
       });
@@ -2063,6 +2204,14 @@ function changeCardQuantity(playerId, deckId, cardId, change) {
 }
 
 function addCardToPlayer(card) {
+  if (isFusionSpell(card)) {
+    console.warn(
+      `Fusion-only spell "${card.name}" cannot be manually added.`
+    );
+
+    return;
+  }
+
   const team = getTeamByPlayerId(state.selectedPlayerId);
   if (!team) return;
 
@@ -2269,12 +2418,35 @@ function renderTeamCard(team) {
 }
 
 function render() {
+  const previousMain = document.querySelector(".main");
+  const previousScrollTop = previousMain?.scrollTop || 0;
+
   const normalizedQuery = normalizeText(state.query);
   const filteredCards = sampleCards.filter((card) => {
-    const matchesQuery = !normalizedQuery || normalizeText(card.name).includes(normalizedQuery) || normalizeText(card.school).includes(normalizedQuery) || normalizeText(card.type).includes(normalizedQuery);
-    const matchesSchool = state.school === "All" || card.school === state.school;
-    const matchesType = state.type === "All" || card.type === state.type;
-    return matchesQuery && matchesSchool && matchesType;
+    const categories = getCardCategories(card);
+
+    const matchesQuery =
+      !normalizedQuery ||
+      normalizeText(card.name).includes(normalizedQuery) ||
+      normalizeText(card.school).includes(normalizedQuery) ||
+      categories.some((category) =>
+        normalizeText(category).includes(normalizedQuery)
+      );
+
+    const matchesSchool =
+      state.school === "All" ||
+      card.school === state.school;
+
+    const matchesType =
+      state.type === "All" ||
+      categories.includes(state.type);
+
+    return (
+      !isFusionSpell(card) &&
+      matchesQuery &&
+      matchesSchool &&
+      matchesType
+    );
   });
 
   const app = document.getElementById("app");
@@ -2640,6 +2812,14 @@ function render() {
 
   renderMessages(latestMessages);
   renderParticipants();
+
+  requestAnimationFrame(() => {
+    const nextMain = document.querySelector(".main");
+
+    if (nextMain) {
+      nextMain.scrollTop = previousScrollTop;
+    }
+  });
 }
 
 function registerUserActivity() {
