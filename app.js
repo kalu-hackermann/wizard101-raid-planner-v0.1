@@ -326,15 +326,17 @@ function formatSpellDisplayName(rawName) {
 let sampleCards = [];
 
 function inferSpellCategories(card) {
-  const name = normalizeText(
+  const rawName = String(
     card.name ||
     card.titleText ||
     card.realName ||
     card.internalName ||
     ""
   );
+  const name = normalizeText(rawName);
+  const baseName = normalizeText(rawName.replace(/\s+[A-D]$/i, ""));
 
-  const explicitCategories = spellCategoryOverrides[name];
+  const explicitCategories = spellCategoryOverrides[name] || spellCategoryOverrides[baseName];
 
   if (explicitCategories) {
     return explicitCategories;
@@ -380,6 +382,11 @@ function getCardCategories(card) {
   }
 
   return inferSpellCategories(card);
+}
+
+function getCardCategoryLabel(card) {
+  const categories = getCardCategories(card);
+  return categories.length ? categories.join(" · ") : "Other";
 }
 
 function parseSchoolSpellNames(rawWikiText) {
@@ -957,7 +964,7 @@ function renderPlayerDeck(player, deck) {
               <div class="card-slot" style="--school-gradient:${getSchoolGradient(card.school)}; --school-accent:${schoolPalette[card.school]?.accent || '#ffffff'};">
                 <div class="spell-card-wrap">
                   ${shouldShowSchoolBadge(card.image) ? getSchoolBadgeMarkup(card.school) : ""}
-                  <img class="spell-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
+                  <img class="spell-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${escapeHtml(getCardCategoryLabel(card))}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
                 </div>
                 ${
                   deck.id === "fusion"
@@ -1195,11 +1202,11 @@ function render() {
                 <button class="library-card" data-card-id="${card.id}" style="--school-gradient:${getSchoolGradient(card.school)}; --school-accent:${schoolPalette[card.school]?.accent || '#ffffff'};">
                   <div class="library-card-image-wrap">
                     ${shouldShowSchoolBadge(card.image) ? getSchoolBadgeMarkup(card.school) : ""}
-                    <img class="library-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${card.type}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
+                    <img class="library-image" src="${card.image}" loading="lazy" decoding="async" data-original-src="${card.image}" data-card-name="${escapeHtml(card.name)}" data-card-school="${card.school}" data-card-type="${escapeHtml(getCardCategoryLabel(card))}" data-card-pips="${card.pips || 0}" alt="${escapeHtml(card.name)}" />
                   </div>
                   <div class="library-info">
                     <strong>${escapeHtml(card.name)}</strong>
-                    <span>${escapeHtml(card.school)} · ${escapeHtml(card.type)}</span>
+                    <span>${escapeHtml(card.school)} · ${escapeHtml(getCardCategoryLabel(card))}</span>
                   </div>
                 </button>
               `).join("") : '<div class="no-results">No spells match your filters.</div>'}

@@ -3,10 +3,7 @@
 
 export const offlineSchoolSpellNames = {
   Fire: [
-    {
-      name: "Fire Cat",
-      categories:["Single target spells"]
-    },
+    "Fire Cat",
     "Fire Cat A",
     "Fire Cat C",
     "Fire Elf",
@@ -605,27 +602,44 @@ export const offlineSchoolSpellNames = {
   ],
   Myth: [
     "Blood Bat",
+    "Blood Bat A",
+    "Blood Bat C",
     "Troll",
+    "Troll B",
+    "Troll C",
     "Myth Trap",
     "Cyclops",
+    "Cyclops B",
+    "Cyclops C",
     "Ether Shield",
     "Ether Golem",
+    "Ether Golem B",
     "Humongofrog",
+    "Humongofrog B",
     "Time of Legend",
     "Minotaur",
+    "Minotaur B",
+    "Minotaur C",
     "Stone Colossus",
+    "Stone Colossus B",
     "Vermin Virtuoso",
+    "Vermin Virtuoso B",
     "Earthquake",
     "Delusion",
     "Betrayal",
     "Orthrus",
+    "Orthrus B",
     "Medusa",
+    "Medusa B",
     "Jinn's Defense",
     "Basilisk",
+    "Basilisk B",
     "Phantastic Jinn",
     "Purge",
     "Celestial Calendar",
+    "Celestial Calendar B",
     "King Artorius (Myth)",
+    "King Artorius (Myth) B",
     "Oni's Projection",
     "Trickster Oni",
     "Myth Shield",
@@ -643,14 +657,24 @@ export const offlineSchoolSpellNames = {
     "Saga of Heroes",
     "Gobbler",
     "Athena Battle Sight",
+    "Athena Battle Sight B",
     "Grendel's Amends",
+    "Grendel's Amends B",
     "Hero of Khrysalis",
+    "Hero of Khrysalis B",
     "Keeper of the Flame",
+    "Keeper of the Flame B",
+    "Keeper of the Flame C",
     "Mark of Meowiarty",
+    "Mark of Meowiarty B",
     "Ninja Pigs",
+    "Ninja Pigs B",
     "Saturn's Reaping",
+    "Saturn's Reaping B",
     "Splashsquatch",
+    "Splashsquatch B",
     "Wreckin' Ettin",
+    "Wreckin' Ettin B",
     "Golem Minion",
     "Troll Minion",
     "Mythblade",
@@ -668,12 +692,19 @@ export const offlineSchoolSpellNames = {
     "Vassanji",
     "Mystic Colossus",
     "Witch's House Call",
+    "Witch's House Call B",
     "Snake Charmer",
+    "Snake Charmer B",
     "Scion of Myth",
+    "Scion of Myth B",
     "Tatzlewurm Terror",
+    "Tatzlewurm Terror B",
     "Barbarian's Saga",
+    "Barbarian's Saga B",
     "Improbable Gaze",
+    "Improbable Gaze A",
     "Drop Bear Fury",
+    "Drop Bear Fury B",
     "Thoth",
     "The Emperor",
     "Golem Taunt",
@@ -1325,65 +1356,242 @@ export const fusionRecipes = {
       requires: ["The World", "Dark Seraph"]
     }
   ],
-  Myth: [],
+  Myth: [
+    {
+      result: "Le Morte Thoth",
+      requires: ["Thoth", "King Artorius (Myth)"]
+    },
+    {
+      result: "Thothic Twist",
+      requires: ["Thoth", "Myth Trap"]
+    },
+    {
+      result: "Medusa's Fury",
+      requires: ["Medusa", "Helephant"]
+    },
+    {
+      result: "Blizzotaur",
+      requires: ["Minotaur", "Ice Wyvern"]
+    },
+    {
+      result: "Coldblood Bat",
+      requires: ["Blood Bat", "Snow Angel"]
+    },
+    {
+      result: "Stormin' Gorgon",
+      requires: ["Medusa", "Triton"]
+    },
+    {
+      result: "Minothor",
+      requires: ["Minotaur", "Stormzilla"]
+    },
+    {
+      result: "Swamp-clops",
+      requires: ["Cyclops", "Nature's Wrath"]
+    },
+    {
+      result: "Helpful Bat",
+      requires: ["Blood Bat", "Regenerate"]
+    },
+    {
+      result: "Poisonous Toad",
+      requires: ["Hunomgofrog", "Skeletal Pirate"]
+    },
+    {
+      result: "Sand Troll",
+      requires: ["Troll", "Scorpion"]
+    },
+    {
+      result: "Desert Minotaur",
+      requires: ["Minotaur", "Hydra"]
+    },
+    {
+      result: "Cursed Colossus",
+      requires: ["Mystic Colossus", "Dark Nova"]
+    },
+    {
+      result: "Cursed Colossus B",
+      requires: ["Mystic Colossus B", "Dark Nova"]
+    },
+    {
+      result: "Hex House",
+      requires: ["Witch's House Call", "Dark Nova"]
+    },
+    {
+      result: "Hex House B",
+      requires: ["Witch's House Call B", "Dark Nova"]
+    },
+    {
+      result: "Serpent Beguiler",
+      requires: ["Snake Charmer", "Dark Nova"]
+    },
+    {
+      result: "Serpent Beguiler B",
+      requires: ["Snake Charmer B", "Dark Nova"]
+    },
+    {
+      result: "Tatzlewurm Horror",
+      requires: ["Tatzlewurm Terror", "Dark Nova"]
+    },
+    {
+      result: "Tatzlewurm Horror B",
+      requires: ["Tatzlewurm Terror B", "Dark Nova"]
+    },
+    {
+      result: "Bale Barbarian",
+      requires: ["Barbarian's Saga", "Dark Nova"]
+    },
+    {
+      result: "Bale Barbarian B",
+      requires: ["Barbarian's Saga B", "Dark Nova"]
+    },
+    {
+      result: "Reverse-Emperor",
+      requires: ["The Emperor", "Dark Nova"]
+    }
+  ],
   Storm: []
 };
 
-export const spellCategoryOverrides = {
-  // Buffs and debuffs
-  "dark pact": ["Buffs and debuffs"],
-  "balanceblade": ["Buffs and debuffs"],
-  "elemental blade": ["Buffs and debuffs"],
-  "spirit blade": ["Buffs and debuffs"],
-  "weakness": ["Buffs and debuffs"],
-  "bad juju": ["Buffs and debuffs"],
+export const spellCategoryGroups = {
+  "Buffs and debuffs": [
+    "Fire Weakness", "Firespear", "Fireblade", "Smoke Screen", "Inferno Blade",
+    "Inferno Attenuate", "Wild Amplify", "Wild Blade", "Ember Attenuate", "Ember Blade",
+    "Weakness", "Blade Dilution", "Trap Dilution", "Elemental Weakness", "Spirit Weakness",
+    "Elemental Blade", "Spirit Blade", "Elemental Spear", "Spirit Spear", "Precision",
+    "Balanceblade", "Black Mantle", "Bladestorm", "Heat Trap", "Shade Trap", "Dust Blade",
+    "Dust Amplify", "Story Trap", "Oasis Amplify", "Oasis Blade", "Drought Attenuate",
+    "Drought Blade", "Putrefaction", "Contagion", "Infection", "Threefold Fever",
+    "Death Weakness", "Deathspear", "Deathblade", "Plague", "Virulent Plague",
+    "Mass Infection", "Bad Juju", "Drowned Blade", "Drowned Amplify", "Ghost Amplify",
+    "Ghost Blade", "Tomb Blade", "Ice Weakness", "Icespear", "Iceblade", "Squall Blade",
+    "Squall Amplify", "Glacier Amplify", "Glacier Blade", "Blight Attenuate", "Blight Blade",
+    "Life Weakness", "Lifespear", "Lifeblade", "Guidance", "Guiding Light",
+    "Brilliant Light", "Energy Blade", "Energy Attenuate", "Soul Attenuate", "Soul Blade",
+    "Strength Blade", "Myth Weakness", "Mythspear", "Mythblade", "Epiphany Blade",
+    "Epiphany Attenuate", "Creation Amplify", "Creation Blade", "Finale Attenuate",
+    "Finale Blade", "Storm Weakness", "Stormspear", "Stormblade", "Supercharge",
+    "Typhoon Attenuate", "Typhoon Blade", "Flood Amplify", "Flood Blade", "Tornado Blade",
+    "Fortify", "Amplify", "Pathogen", "Infallible", "Attenuate", "Vengeance",
+    "Empowerment", "Berserk", "Mend", "Galvanic Field", "Furnace", "Sleet Storm",
+    "Cycle of Life", "Virulence", "Reliquary", "Chastisement", "Punishment", "Devotion",
+    "Brace", "Magnify", "Flawless", "Frenzy", "Adapt", "Renew", "Stabilize", "Conviction",
+    "Sharpened Blade", "Aegis", "Indemnity"
+  ],
 
-  // Shields
-  "tower shield": ["Shields"],
-  "legion shield": ["Shields"],
-  "volcanic shield": ["Shields"],
-  "thermic shield": ["Shields"],
+  Shields: [
+    "Glacial Shield", "Fire Shield", "Elemental Shield", "Spirit Shield", "Dream Shield",
+    "Death Shield", "Volcanic Shield", "Tower Shield", "Snow Shield", "Ice Armor",
+    "Legion Shield", "Frozen Armor", "Legend Shield", "Spirit Armor", "Life Shield",
+    "Ether Shield", "Myth Shield", "Thermic Shield", "Storm Shield", "Stun Block"
+  ],
 
-  // Traps
-  "feint": ["Traps"],
-  "mass feint": ["Traps"],
-  "elemental trap": ["Traps"],
-  "spirit trap": ["Traps"],
-  "curse": ["Traps"],
-  "hex": ["Traps"],
+  Traps: [
+    "Fire Trap", "Fuel", "Backdraft", "Mist Trap", "Caldera Trap", "Dune Trap",
+    "Elemental Trap", "Spirit Trap", "Hex", "Death Trap", "Feint", "Curse", "Ash Trap",
+    "Permafrost Trap", "Extinction Trap", "Ice Trap", "Deermouse Trap", "Burn Trap",
+    "Winter Trap", "Avalanche Trap", "Life Trap", "Burrowing Bane", "Temper Trap",
+    "Patience Trap", "Memory Trap", "Myth Trap", "Betrayal", "Inspiration Trap",
+    "History Trap", "Fable Trap", "Storm Trap", "Windstorm", "Lightning Trap", "Hail Trap",
+    "Calamity Trap", "Potent Trap"
+  ],
 
-  // Field spells
-  "wyldfire": ["Field spells"],
-  "darkwind": ["Field spells"],
-  "balefrost": ["Field spells"],
-  "sanctuary": ["Field spells"],
-  "doom and gloom": ["Field spells"],
-  "time of legend": ["Field spells"],
+  "Field spells": [
+    "Wyldfire", "Combustion", "Balance of Power", "Doom and Gloom", "Deadzone",
+    "Age of Reckoning", "Balefrost", "Katabatic Wind", "Sanctuary", "Circle of Thorns",
+    "Time of Legend", "Saga of Heroes", "Darkwind", "Astraphobia", "Starfall"
+  ],
 
-  // Multiple-category examples
-  "fire dragon": ["DOTs", "Area of Effect (AOE)"],
-  "scald": ["DOTs", "Area of Effect (AOE)"],
-  "rain of fire": ["DOTs", "Area of Effect (AOE)"],
-  "heck hound": ["DOTs", "Single target spells"],
+  DOTs: [
+    "Fire Elf", "Heck Hound", "Scald", "Link", "Power Link", "Burning Rampage",
+    "Fire Dragon", "Rain of Fire", "Iron Curse", "Poison", "Skeletal Dragon",
+    "Deer Knight", "Frostbite", "Snow Angel", "Reindeer Knight", "Hunting Wyrm",
+    "Spinysaur", "Wings of Fate", "Basilisk", "King Artorius (Myth)"
+  ],
 
-  // AOE attacks
-  "meteor strike": ["Area of Effect (AOE)"],
-  "raging bull": ["Area of Effect (AOE)"],
-  "storm lord": ["Area of Effect (AOE)"],
-  "frost giant": ["Area of Effect (AOE)"],
-  "forest lord": ["Area of Effect (AOE)"],
+  "Area of Effect (AOE)": [
+    "Meteor Strike", "Scald", "Fire Dragon", "Rain of Fire", "Raging Bull",
+    "Sandstorm", "Power Nova", "Ra", "Nested Fury", "Mockenspiel", "Old One's Endgame",
+    "Scarecrow", "Deer Knight", "Ship of Fools", "Call of Khrulhu", "Snack Attack",
+    "Gravestorm", "Wobbegong Frenzy", "Blizzard", "Frost Giant", "Snow Angel",
+    "Reindeer Knight", "Snowball Barrage", "Deathly Depths", "Forest Lord",
+    "Ratatoskr's Spin", "Wings of Fate", "Lord of the Jungle", "Humongofrog",
+    "Earthquake", "Orthrus", "Mystic Colossus", "Tatzlewurm Terror", "Storm Lord",
+    "Sirens", "Tempest", "Glowbug Squall", "Sound of Musicology", "Bunyip's Rage"
+  ],
 
-  // Single-target attacks
-  "fire cat": ["Single target spells"],
-  "sunbird": ["Single target spells"],
-  "helephant": ["Single target spells"],
-  "kraken": ["Single target spells"],
-  "stormzilla": ["Single target spells"],
+  "Single target spells": [
+    "Fire Cat", "Sunbird", "Glacial Golem", "Immolate", "Phoenix", "Naphtha Scarab",
+    "Helephant", "Inferno Salamander", "Meltdown", "Backfire", "Efreet", "Caldera Jinn",
+    "Sun Serpent", "King Artorius (Fire)", "Infernal Oni", "Brimstone Revenant",
+    "Burning Rampage", "Fires of Mars", "Hephaestus", "Jackall & Hound", "Krampus",
+    "Nautilus Unleashed", "Whitehart Fire", "Heck Hound", "Sir Lamorak", "Fire from Above",
+    "Scorching Scimitars", "Scion of Fire", "S'more Machine", "Blast Off!", "Ammut",
+    "The Chariot", "Glimpse of Infinity", "Phantasmania!", "A-Baahh-Calypse",
+    "Scarab", "Scorpion", "Locust Swarm", "Elemental Golem",
+    "Gearhead Destroyer", "Spectral Blast", "Iron Curse", "Hydra", "Obsidian Colossus",
+    "Jinn's Fortune", "Chimera", "Duststorm Jinn", "Spinning Scythe",
+    "Sabertooth", "King Artorius (Balance)", "Tribunal Oni", "Loremaster", "Ninja Piglets",
+    "Pops' Knuckles", "Samoorai", "Savage Paw", "Spiritual Tribunal", "Judgement",
+    "Brave Sir Badger", "Terminus' Strike", "Scales of Destiny", "Mana Burn", "Supernova",
+    "Gaze of Fate", "Sand Wurm", "Scion of Balance", "Rainbow Serpent", "Chameleon Clash",
+    "Wheel of Fortune", "Dark Sprite", "Ghoul",
+    "Banshee", "Vampire", "Crimson Phantom", "Wraith", "Monster Mash", "Skeletal Pirate",
+    "Skeletal Dragon", "Dr. Von's Monster", "Macabre Jinn", "Avenging Fossil",
+    "King Artorius (Death)", "Doom Oni", "Headless Horseman", "Jacques Scratches!",
+    "Kiiii-Yaaaa!", "Lord of Night", "Monk of Mourning", "Pluto's Peril", "Winged Sorrow",
+    "Qismah's Curse", "Scion of Death", "Grim Reader", "Mortality", "Anubis",
+    "Frost Beetle", "Snow Serpent", "Evil Snowman", "Volcanic Golem", "Ice Wyvern",
+    "Blight Hound", "Thieving Dragon", "Colossus", "Frostfeather", "Woolly Mammoth",
+    "Iceburn Jinn", "Jinn's Vexation", "Lord of Winter", "King Artorius (Ice)", "Everwinter Oni",
+    "Angry Snowpig", "Handsome Fomori", "Neptune's Fury", "Ratstabber", "Winter Moon",
+    "Frostbite", "Freddo", "Abominable Weaver", "Climaclysm", "Scion of Ice",
+    "Shatterhorn", "Freeze Ray", "Count Croakula", "Shu", "The Hierophant", "Imp",
+    "Leprechaun", "Nature's Wrath", "Seraph", "Hunting Wyrm", "Earth Walker", "Centaur",
+    "Infestation", "Jinn's Affliction", "Verdurous Jinn", "Gnomes!", "Spinysaur",
+    "King Artorius (Life)", "Primal Oni",
+    "Camp Bandit", "Goat Monk", "Luminous Weaver", "Sacred Charge", "Whiplash",
+    "Sir Bedevere", "Hungry Caterpillar", "Lamassu", "Scion of Life", "Grrnadier",
+    "Starspawn", "Zand the Bandit", "Taweret", "The World", "Blood Bat", "Troll",
+    "Cyclops", "Ether Golem", "Minotaur", "Stone Colossus", "Vermin Virtuoso", "Orthrus",
+    "Medusa", "Basilisk", "Phantastic Jinn", "Celestial Calendar", "King Artorius (Myth)",
+    "Trickster Oni", "Gobbler", "Athena Battle Sight", "Hero of Khrysalis",
+    "Keeper of the Flame", "Mark of Meowiarty", "Ninja Pigs", "Saturn's Reaping",
+    "Splashsquatch", "Wreckin' Ettin", "Vassanji", "Witch's House Call", "Snake Charmer",
+    "Scion of Myth", "Barbarian's Saga", "Improbable Gaze", "Drop Bear Fury", "Thoth",
+    "The Emperor", "Thunder Snake", "Lightning Bats", "Storm Shark", "Thermic Golem",
+    "Kraken", "Stormzilla", "Stormwing", "Triton", "Thunderman", "Leviathan",
+    "Thundering Jinn", "Storm Owl", "King Artorius (Storm)", "Turmoil Oni", "Beary Surprise",
+    "Catalan", "Catch of the Day", "Hammer of Thor", "Jupiter's Might", "Queen Calypso",
+    "Revolutionary's Strike", "Wild Bolt", "Insane Bolt", "Mokompo", "Rusalka's Wrath",
+    "Iron Sultan", "Scion of Storm", "Dark & Stormy", "Tree of Strife", "Heqet", "The Tower"
+  ],
 
-  // Heals
-  "satyr": ["Heals"],
-  "fairy": ["Heals"],
-  "pixie": ["Heals"],
-  "rebirth": ["Heals", "Area of Effect (AOE)"],
-  "unicorn": ["Heals", "Area of Effect (AOE)"]
+  Heals: [
+    "Link", "Power Link", "Helping Hands", "Availing Hands", "Dyvim's Resurgence",
+    "Purloin Health", "Ghoul", "Vampire", "Wraith", "Scarecrow", "Dr. Von's Monster",
+    "Lord of Night", "Ship of Fools", "Call of Khrulhu", "Sacrifice", "Steal Health",
+    "Draw Health", "Celestial Intervention", "Sprite", "Satyr", "Regenerate", "Rebirth", "Tranquility",
+    "Meditation", "Sprite Swarm", "Pigsie", "Minor Blessing", "Fairy", "Pixie", "Unicorn",
+    "Triage", "Dryad", "Mass Triage", "Guardian Spirit", "Wings of Fate",
+    "Grendel's Amends", "Mend Minion", "Siphon Health", "Energy Transfer",
+    "Jinn's Restoration", "Beary Surprise", "Healing Current"
+  ]
 };
+
+function normalizeSpellCategoryKey(value) {
+  return String(value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+export const spellCategoryOverrides = Object.entries(spellCategoryGroups).reduce(
+  (index, [category, spellNames]) => {
+    spellNames.forEach((spellName) => {
+      const key = normalizeSpellCategoryKey(spellName);
+      const categories = index[key] || [];
+      if (!categories.includes(category)) categories.push(category);
+      index[key] = categories;
+    });
+    return index;
+  },
+  {}
+);
