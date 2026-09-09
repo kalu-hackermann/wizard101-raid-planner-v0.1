@@ -720,27 +720,47 @@ export const offlineSchoolSpellNames = {
   ],
   Storm: [
     "Thunder Snake",
+    "Thunder Snake A",
+    "Thunder Snake C",
     "Lightning Bats",
+    "Lightning Bats B",
+    "Lightning Bats C",
     "Thermic Shield",
     "Storm Shark",
+    "Storm Shark B",
+    "Storm Shark C",
     "Storm Trap",
     "Thermic Golem",
+    "Thermic Golem B",
     "Kraken",
+    "Kraken B",
+    "Kraken C",
     "Windstorm",
     "Darkwind",
     "Stormzilla",
+    "Stormzilla B",
+    "Stormzilla C",
     "Stormwing",
+    "Stormwing B",
     "Triton",
+    "Triton B",
+    "Triton C",
     "Thunderman",
+    "Thunderman B",
     "Reap the Whirlwind",
     "Energy Transfer",
     "Storm Lord",
+    "Storm Lord B",
     "Leviathan",
+    "Leviathan B",
     "Jinn's Restoration",
     "Thundering Jinn",
     "Sirens",
+    "Sirens B",
     "Storm Owl",
+    "Storm Owl B",
     "King Artorius (Storm)",
+    "King Artorius (Storm) B",
     "Oni's Attrition",
     "Turmoil Oni",
     "Storm Shield",
@@ -753,13 +773,24 @@ export const offlineSchoolSpellNames = {
     "Stormspear",
     "Astraphobia",
     "Beary Surprise",
+    "Beary Surprise B",
+    "Beary Surprise D",
     "Catalan",
+    "Catalan B",
+    "Catalan C",
     "Catch of the Day",
+    "Catch of the Day B",
+    "Catch of the Day C",
     "Clean Sweep",
+    "Clean Sweep B",
     "Hammer of Thor",
+    "Hammer of Thor A",
     "Jupiter's Might",
+    "Jupiter's Might B",
     "Queen Calypso",
+    "Queen Calypso A",
     "Revolutionary's Strike",
+    "Revolutionary's Strike B",
     "Lightning Strike",
     "Storm Prism",
     "Stormblade",
@@ -774,15 +805,25 @@ export const offlineSchoolSpellNames = {
     "Healing Current",
     "Mokompo",
     "Glowbug Squall",
+    "Glowbug Squall B",
     "Rusalka's Wrath",
+    "Rusalka's Wrath B",
     "Iron Sultan",
+    "Iron Sultan B",
     "Scion of Storm",
+    "Scion of Storm B",
     "Sound of Musicology",
+    "Sound of Musicology B",
     "Dark & Stormy",
+    "Dark & Stormy B",
     "Tree of Strife",
+    "Tree of Strife A",
     "Bunyip's Rage",
+    "Bunyip's Rage B",
     "Heqet",
+    "Heqet B",
     "The Tower",
+    "The Tower B",
     "Lightning Trap",
     "Hail Trap",
     "Calamity Trap",
@@ -916,6 +957,29 @@ export const offlineSchoolSpellNamesTreasureCards = {
   ]
 }
 
+export const offlineSchoolSpellNamesExtraDeck = {
+  Fire: [
+    
+  ],
+  Balance: [
+    
+  ],
+  Death: [
+    
+  ],
+  Ice: [
+    
+  ],
+  Life: [
+    
+  ],
+  Myth: [
+    
+  ],
+  Storm: [
+    
+  ]
+}
 export const fusionRecipes = {
   Fire: [
     {
@@ -1450,7 +1514,96 @@ export const fusionRecipes = {
       requires: ["The Emperor", "Dark Nova"]
     }
   ],
-  Storm: []
+  Storm: [
+    {
+      result: "Heqet's Curse",
+      requires: ["Heqet", "Starfall"]
+    },
+    {
+      result: "Heqet's Strike",
+      requires: ["Heqet", "Stormblade"]
+    },
+    {
+      result: "Boiling Kraken",
+      requires: ["Kraken", "Immolate"]
+    },
+    {
+      result: "Chillzilla",
+      requires: ["Stormzilla", "Evil Snowman"]
+    },
+    {
+      result: "Shivering Snake",
+      requires: ["Thunder Snake", "Thieving Dragon"]
+    },
+    {
+      result: "Grimzilla",
+      requires: ["Stormzilla", "Ghoul"]
+    },
+    {
+      result: "Mythic Mermaids",
+      requires: ["Sirens", "Stone Colossus"]
+    },
+    {
+      result: "Green Serpent",
+      requires: ["Leviathan", "Centaur"]
+    },
+    {
+      result: "Natural Predator",
+      requires: ["Storm Shark", "Earth Walker"]
+    },
+    {
+      result: "King of Order",
+      requires: ["Storm Lord", "Spectral Blast"]
+    },
+    {
+      result: "Sand Monster",
+      requires: ["Triton", "Gearhead Destroyer"]
+    },
+    {
+      result: "Gloambugs!",
+      requires: ["Glowbug Squall", "Dark Shrike"]
+    },
+    {
+      result: "Gloambugs! B",
+      requires: ["Glowbug Squall B", "Dark Shrike"]
+    },
+    {
+      result: "Rusalka's Flood",
+      requires: ["Rusalka's Wrath", "Dark Shrike"]
+    },
+    {
+      result: "Rusalka's Flood B",
+      requires: ["Rusalka's Wrath B", "Dark Shrike"]
+    },
+    {
+      result: "Shadow Sultan",
+      requires: ["Iron Sultan", "Dark Shrike"]
+    },
+    {
+      result: "Shadow Sultan B",
+      requires: ["Iron Sultan B", "Dark Shrike"]
+    },
+    {
+      result: "Shade of Musicology",
+      requires: ["Sound of Musicology", "Dark Shrike"]
+    },
+    {
+      result: "Shade of Musicology B",
+      requires: ["Sound of Musicology B", "Dark Shrike"]
+    },
+    {
+      result: "Fear of the Dark",
+      requires: ["Dark & Stormy", "Dark Shrike"]
+    },
+    {
+      result: "Fear of the Dark B",
+      requires: ["Dark & Stormy B", "Dark Shrike"]
+    },
+    {
+      result: "Reverse-Tower",
+      requires: ["The Tower", "Dark Shrike"]
+    }
+  ]
 };
 
 export const spellCategoryGroups = {
