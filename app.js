@@ -1179,33 +1179,49 @@ function render() {
         </main>
       </div>
       
-      ${state.chatOpen ? `<aside class="chat-panel">
-        <div class="chat-header">
-          <div>
-            <div class="eyebrow">LIVE DISCUSSION</div>
-            <strong id="chat-user-name">${escapeHtml(participantName)}</strong>
+      <div class="chat-drawer ${state.chatOpen ? "open" : ""}">
+        <button
+          class="chat-toggle"
+          id="chat-toggle-btn"
+          type="button"
+          aria-controls="chat-panel"
+          aria-expanded="${state.chatOpen}"
+          aria-label="${state.chatOpen ? "Collapse chat" : "Expand chat"}"
+        >
+          <span aria-hidden="true">${state.chatOpen ? "›" : "‹"}</span>
+          <strong>Chat</strong>
+        </button>
+
+        <aside
+          class="chat-panel"
+          id="chat-panel"
+          aria-hidden="${!state.chatOpen}"
+          ${state.chatOpen ? "" : "inert"}
+        >
+          <div class="chat-header">
+            <div>
+              <div class="eyebrow">LIVE DISCUSSION</div>
+              <strong id="chat-user-name">${escapeHtml(participantName)}</strong>
+            </div>
+
+            <button class="icon-btn" id="close-chat-btn" aria-label="Collapse chat">✕</button>
           </div>
 
-          <button class="icon-btn" id="close-chat-btn" aria-label="Close chat">✕</button>
-        </div>
+          <div id="chat-messages" class="chat-messages"></div>
 
-        <div id="chat-messages" class="chat-messages"></div>
-
-        <form id="chat-form" class="chat-form">
-          <input
-            id="chat-input"
-            type="text"
-            maxlength="500"
-            autocomplete="off"
-            placeholder="Write a message..."
-            value="${escapeHtml(state.chatDraft)}"
-          />
-          <button type="submit" class="primary">Send</button>
-        </form>
-      </aside>` : ""}
-      <button class="chat-toggle" id="chat-toggle-btn" aria-label="Toggle chat">
-        <span>💬</span><strong>Chat</strong>
-      </button>
+          <form id="chat-form" class="chat-form">
+            <input
+              id="chat-input"
+              type="text"
+              maxlength="500"
+              autocomplete="off"
+              placeholder="Write a message..."
+              value="${escapeHtml(state.chatDraft)}"
+            />
+            <button type="submit" class="primary">Send</button>
+          </form>
+        </aside>
+      </div>
 
       ${state.pickerOpen ? `
         <div class="modal-backdrop" id="modal-backdrop">
@@ -1447,7 +1463,10 @@ function render() {
   document.querySelectorAll("[data-card-id]")?.forEach((element) => {
     element.addEventListener("click", () => {
       const cardId = element.getAttribute("data-card-id");
-      const card = sampleCards.find((entry) => entry.id === cardId);
+      const activeCardCatalog = state.selectedDeckId === "extra"
+        ? extraDeckCards
+        : sampleCards;
+      const card = activeCardCatalog.find((entry) => entry.id === cardId);
       if (card) addCardToPlayer(card);
     });
   });
