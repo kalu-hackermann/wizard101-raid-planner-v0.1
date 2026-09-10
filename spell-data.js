@@ -989,7 +989,7 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Balancespear",
     "Bestow",
     "Black Mantle",
-    "Black Dance",
+    "Blade Dance",
     "Blade Storm",
     "Cloaked Balanceblade",
     "Donate Power",
@@ -1003,6 +1003,7 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Elemental Trap",
     "Hex",
     "Kite Shield",
+    "Mass Hex",
     "Mass Weakness",
     "Oni's Shadow",
     "Phase Shift",
@@ -1081,6 +1082,7 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Dryad",
     "Entangle",
     "Guardian Spirit",
+    "Guidance",
     "Guiding Armor",
     "Guiding Light",
     "Legend Shield",
@@ -1107,6 +1109,7 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Disjunction",
     "Ether Shield",
     "Mass Myth Trap",
+    "Mass Myth Prism",
     "Myth Prism",
     "Myth Shield",
     "Myth Trap",
@@ -1143,7 +1146,7 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Triple Cleanse Charm",
     "Windstorm"
   ]
-}
+};
 export const fusionRecipes = {
   Fire: [
     {

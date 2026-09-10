@@ -3,6 +3,7 @@ import { auth, db } from "./firebase.js";
 import {
   offlineSchoolSpellNames,
   offlineSchoolSpellNamesTreasureCards,
+  offlineSchoolSpellNamesExtraDeck,
   fusionRecipes,
   spellCategoryOverrides
 } from "./spell-data.js";
@@ -171,7 +172,7 @@ function shouldShowSchoolBadge(imageUrl) {
   return typeof imageUrl === "string" && imageUrl.startsWith("data:image/svg+xml");
 }
 
-function buildLocalSpellImageUrl(school, spellName) {
+function buildLocalSpellImageUrl(school, spellName, subfolder = "") {
   const normalizedSchool = String(school || "").trim();
   const normalizedSpellName = String(spellName || "").trim();
 
@@ -194,7 +195,11 @@ function buildLocalSpellImageUrl(school, spellName) {
   const folderName = folderNames[normalizedSchool];
   if (!folderName) return "";
 
-  return `/pictures/${encodeURIComponent(folderName)}/${encodeURIComponent(normalizedSpellName)}.png`;
+  const pathSegments = [folderName];
+  if (subfolder) pathSegments.push(subfolder);
+  pathSegments.push(`${normalizedSpellName}.png`);
+
+  return `/pictures/${pathSegments.map(encodeURIComponent).join("/")}`;
 }
 
 function makeSpellImage(card) {
@@ -324,6 +329,7 @@ function formatSpellDisplayName(rawName) {
 }
 
 let sampleCards = [];
+let extraDeckCards = [];
 
 function inferSpellCategories(card) {
   const rawName = String(
@@ -477,9 +483,43 @@ function buildOfflineCardCatalog() {
   return cards;
 }
 
+function buildExtraDeckCardCatalog() {
+  const cards = [];
+
+  Object.entries(offlineSchoolSpellNamesExtraDeck).forEach(([school, spellEntries]) => {
+    spellEntries.forEach((entry, index) => {
+      const spell = typeof entry === "string" ? { name: entry } : entry;
+      const spellName = String(spell.name || "Unknown Spell");
+      const categories = Array.isArray(spell.categories)
+        ? spell.categories
+        : inferSpellCategories({ name: spellName });
+      const pips = Number(spell.pips ?? 0);
+      const localImage = buildLocalSpellImageUrl(school, spellName, "Extra deck");
+      const image = localImage || spell.image || getFallbackCardImage({
+        name: spellName,
+        school,
+        type: categories[0] || "Other",
+        pips
+      });
+
+      cards.push({
+        id: `extra-${school.toLowerCase()}-${index}-${normalizeText(spellName)}`,
+        name: spellName,
+        school,
+        categories,
+        pips,
+        image
+      });
+    });
+  });
+
+  return cards;
+}
+
 function loadSpellCatalog() {
   try {
     sampleCards = buildOfflineCardCatalog();
+    extraDeckCards = buildExtraDeckCardCatalog();
   } catch (error) {
     console.error("[Spell Loader] Critical error loading spell catalog:", error);
   }
@@ -1049,7 +1089,11 @@ function render() {
   const previousScrollTop = previousMain?.scrollTop || 0;
 
   const normalizedQuery = normalizeText(state.query);
-  const filteredCards = sampleCards.filter((card) => {
+  const activeCardCatalog = state.selectedDeckId === "extra"
+    ? extraDeckCards
+    : sampleCards;
+
+  const filteredCards = activeCardCatalog.filter((card) => {
     const categories = getCardCategories(card);
 
     const matchesQuery =
