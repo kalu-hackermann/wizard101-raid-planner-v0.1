@@ -1145,6 +1145,18 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Thermic Shield",
     "Triple Cleanse Charm",
     "Windstorm"
+  ],
+  Sun:  [
+
+  ],
+  Star:  [
+    
+  ],
+  Moon:  [
+    
+  ],
+  Shadow:  [
+    
   ]
 };
 export const fusionRecipes = {
