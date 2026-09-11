@@ -24,6 +24,13 @@ service cloud.firestore {
         allow create, update, delete: if request.auth != null
           && request.auth.uid == participantId;
       }
+
+      // Each player column is stored separately so collaborators editing
+      // different decks do not overwrite or re-render the entire raid.
+      match /playerSections/{playerId} {
+        allow read, create, update: if request.auth != null;
+        allow delete: if false;
+      }
     }
   }
 }

@@ -47,6 +47,7 @@ let firebaseReady = false;
 let applyingRemoteState = false;
 let saveTimer = null;
 let unsubscribeRaid = null;
+let unsubscribePlayerSections = null;
 let unsubscribeMessages = null;
 let unsubscribeParticipants = null;
 let presenceInterval = null;
@@ -56,6 +57,10 @@ let liveStatusTimer = null;
 let changeVersion = 0;
 let hasPendingPlannerChanges = false;
 let pendingSaveGeneration = 0;
+let pendingStructureSave = false;
+let pendingRaidNameSave = false;
+let pendingPlayerIds = new Set();
+const latestPlayerSections = new Map();
 let saveStatusText = "Connecting…";
 let saveStatusIsLive = false;
 
@@ -109,6 +114,7 @@ async function startFirebase() {
     firebaseReady = true;
 
     subscribeToRaid();
+    subscribeToPlayerSections();
     subscribeToMessages();
     startPresence();
   });
@@ -330,6 +336,7 @@ function formatSpellDisplayName(rawName) {
 
 let sampleCards = [];
 let extraDeckCards = [];
+let treasureDeckCards = [];
 
 function inferSpellCategories(card) {
   const rawName = String(
@@ -516,10 +523,50 @@ function buildExtraDeckCardCatalog() {
   return cards;
 }
 
+function buildTreasureDeckCardCatalog() {
+  const cards = [];
+
+  Object.entries(offlineSchoolSpellNamesTreasureCards).forEach(([school, spellEntries]) => {
+    spellEntries.forEach((entry, index) => {
+      const spell = typeof entry === "string" ? { name: entry } : entry;
+      const spellName = String(spell.name || "Unknown Spell");
+      const categories = Array.isArray(spell.categories)
+        ? spell.categories
+        : inferSpellCategories({ name: spellName });
+      const pips = Number(spell.pips ?? 0);
+      const localImage = buildLocalSpellImageUrl(school, spellName, "TCs");
+      const image = localImage || spell.image || getFallbackCardImage({
+        name: spellName,
+        school,
+        type: categories[0] || "Other",
+        pips
+      });
+
+      cards.push({
+        id: `treasure-${school.toLowerCase()}-${index}-${normalizeText(spellName)}`,
+        name: spellName,
+        school,
+        categories,
+        pips,
+        image
+      });
+    });
+  });
+
+  return cards;
+}
+
+function getCardCatalogForDeck(deckId) {
+  if (deckId === "extra") return extraDeckCards;
+  if (deckId === "treasure") return treasureDeckCards;
+  return sampleCards;
+}
+
 function loadSpellCatalog() {
   try {
     sampleCards = buildOfflineCardCatalog();
     extraDeckCards = buildExtraDeckCardCatalog();
+    treasureDeckCards = buildTreasureDeckCardCatalog();
   } catch (error) {
     console.error("[Spell Loader] Critical error loading spell catalog:", error);
   }
@@ -619,33 +666,83 @@ function getTeamByPlayerId(playerId) {
   return state.teams.find((team) => team.players.some((player) => player.id === playerId)) || null;
 }
 
-async function saveStateToFirebase() {
+function getPlayerSectionsCollection() {
+  return collection(db, "raids", raidId, "playerSections");
+}
 
+function findPlayerById(playerId) {
+  const team = getTeamByPlayerId(playerId);
+  const player = team?.players.find((entry) => entry.id === playerId);
+  return team && player ? { team, player } : null;
+}
+
+async function saveStateToFirebase({ forceStructure = false } = {}) {
   if (!firebaseReady || !currentUser || applyingRemoteState) {
     return;
   }
 
   const generationBeingSaved = pendingSaveGeneration;
+  const structureBeingSaved = forceStructure || pendingStructureSave;
+  const raidNameBeingSaved = forceStructure || pendingRaidNameSave;
+  const playerIdsBeingSaved = [...pendingPlayerIds];
 
   try {
     setSaveStatus("Syncing…");
 
-    await setDoc(
-      raidDocument,
-      {
-        raidName: state.raidName,
-        teams: state.teams,
+    const updatedBy = {
+      uid: currentUser.uid,
+      name: participantName
+    };
+    const writes = [];
+
+    if (structureBeingSaved || raidNameBeingSaved) {
+      const raidUpdate = {
         updatedAt: serverTimestamp(),
-        updatedBy: {
-          uid: currentUser.uid,
-          name: participantName
-        }
-      },
-      { merge: true }
-    );
+        updatedBy
+      };
+
+      if (raidNameBeingSaved) raidUpdate.raidName = state.raidName;
+      if (structureBeingSaved) raidUpdate.teams = state.teams;
+
+      writes.push(setDoc(raidDocument, raidUpdate, { merge: true }));
+    }
+
+    playerIdsBeingSaved.forEach((playerId) => {
+      const section = findPlayerById(playerId);
+      if (!section) return;
+
+      writes.push(setDoc(
+        doc(getPlayerSectionsCollection(), playerId),
+        {
+          teamId: section.team.id,
+          player: section.player,
+          updatedAt: serverTimestamp(),
+          updatedBy
+        },
+        { merge: true }
+      ));
+    });
+
+    if (!writes.length && forceStructure) {
+      writes.push(setDoc(
+        raidDocument,
+        {
+          raidName: state.raidName,
+          teams: state.teams,
+          updatedAt: serverTimestamp(),
+          updatedBy
+        },
+        { merge: true }
+      ));
+    }
+
+    await Promise.all(writes);
 
     if (generationBeingSaved === pendingSaveGeneration) {
       hasPendingPlannerChanges = false;
+      pendingStructureSave = false;
+      pendingRaidNameSave = false;
+      pendingPlayerIds.clear();
       scheduleLiveStatus();
     } else {
       postponePendingSave();
@@ -657,10 +754,14 @@ async function saveStateToFirebase() {
   }
 }
 
-function scheduleSave() {
+function scheduleSave({ playerId = null, raidName = false, structure = false } = {}) {
   if (!firebaseReady || applyingRemoteState) {
     return;
   }
+
+  if (playerId) pendingPlayerIds.add(playerId);
+  if (raidName) pendingRaidNameSave = true;
+  if (structure || (!playerId && !raidName)) pendingStructureSave = true;
 
   hasPendingPlannerChanges = true;
   pendingSaveGeneration += 1;
@@ -681,7 +782,7 @@ function postponePendingSave() {
 
   saveTimer = window.setTimeout(() => {
     saveStateToFirebase();
-  }, 10000);
+  }, 1000);
 }
 
 function markChanged() {
@@ -826,7 +927,7 @@ function updatePlayerName(playerId, value) {
   team.players = team.players.map((player) =>
     player.id === playerId ? { ...player, name: value || "Player" } : player
   );
-  scheduleSave();
+  scheduleSave({ playerId });
 }
 
 function updatePlayerSchool(playerId, school) {
@@ -837,7 +938,7 @@ function updatePlayerSchool(playerId, school) {
     player.id === playerId ? { ...player, school } : player
   );
   render();
-  scheduleSave();
+  scheduleSave({ playerId });
 }
 
 function cyclePlayerSchool(playerId) {
@@ -867,7 +968,7 @@ function changeCardQuantity(playerId, deckId, cardId, change) {
     return { ...player, decks };
   });
   render();
-  scheduleSave();
+  scheduleSave({ playerId });
 }
 
 function addCardToPlayer(card) {
@@ -897,7 +998,7 @@ function addCardToPlayer(card) {
   });
   state.pickerOpen = false;
   render();
-  scheduleSave();
+  scheduleSave({ playerId: state.selectedPlayerId });
 }
 
 function deckExpansionKey(playerId, deckId) {
@@ -1051,6 +1152,24 @@ function renderPlayerDeck(player, deck) {
     </section>`;
 }
 
+function renderPlayerColumn(team, player) {
+  return `
+    <div class="player-column" data-player-card="${player.id}">
+      <div class="player-editor">
+        <button class="school-icon" type="button" data-cycle-school="${player.id}" aria-label="Change ${escapeHtml(player.name)} school">
+          <img src="${getSchoolLogoSvg(player.school)}" alt="${player.school}" />
+        </button>
+        <input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name)}" />
+        <button class="player-remove" data-remove-player="${team.id}|${player.id}">✕</button>
+      </div>
+
+      <div class="player-decks">
+        ${deckDefinitions.map((deck) => renderPlayerDeck(player, deck)).join("")}
+      </div>
+    </div>
+  `;
+}
+
 function renderTeamCard(team) {
   return `
     <section class="team-panel ${team.id === state.activeTeamId ? "active" : ""}">
@@ -1064,24 +1183,85 @@ function renderTeamCard(team) {
       </div>
 
       <div class="team-player-grid">
-        ${team.players.map((player) => `
-          <div class="player-column" data-player-card="${player.id}">
-            <div class="player-editor">
-              <button class="school-icon" type="button" data-cycle-school="${player.id}" aria-label="Change ${escapeHtml(player.name)} school">
-                <img src="${getSchoolLogoSvg(player.school)}" alt="${player.school}" />
-              </button>
-              <input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name)}" />
-              <button class="player-remove" data-remove-player="${team.id}|${player.id}">✕</button>
-            </div>
-
-            <div class="player-decks">
-              ${deckDefinitions.map((deck) => renderPlayerDeck(player, deck)).join("")}
-            </div>
-          </div>
-        `).join("")}
+        ${team.players.map((player) => renderPlayerColumn(team, player)).join("")}
       </div>
     </section>
   `;
+}
+
+function bindPlayerColumnEvents(root = document) {
+  root.querySelectorAll("[data-player-name]").forEach((element) => {
+    element.addEventListener("input", (event) => {
+      const playerId = element.getAttribute("data-player-name");
+      updatePlayerName(playerId, event.target.value);
+    });
+  });
+
+  root.querySelectorAll("[data-cycle-school]").forEach((element) => {
+    element.addEventListener("click", () => {
+      cyclePlayerSchool(element.getAttribute("data-cycle-school"));
+    });
+  });
+
+  root.querySelectorAll("[data-remove-player]").forEach((element) => {
+    element.addEventListener("click", () => {
+      const [teamId, playerId] = element.getAttribute("data-remove-player").split("|");
+      removePlayerFromTeam(teamId, playerId);
+    });
+  });
+
+  root.querySelectorAll("[data-open-picker-player]").forEach((element) => {
+    element.addEventListener("click", () => {
+      const [playerId, deckId] = element.getAttribute("data-open-picker-player").split("|");
+      const team = getTeamByPlayerId(playerId);
+      if (team) state.activeTeamId = team.id;
+      state.selectedPlayerId = playerId;
+      state.selectedDeckId = deckId;
+      state.pickerOpen = true;
+      render();
+    });
+  });
+
+  root.querySelectorAll("[data-toggle-deck]").forEach((element) => {
+    element.addEventListener("click", () => {
+      const [playerId, deckId] = element.getAttribute("data-toggle-deck").split("|");
+      const key = deckExpansionKey(playerId, deckId);
+      state.expandedDecks[key] = !isDeckExpanded(playerId, deckId);
+      render();
+    });
+  });
+
+  root.querySelectorAll("img.spell-image").forEach((img) => {
+    img.addEventListener("error", (event) => {
+      const cardName = (img.dataset.cardName || "Unknown spell").replace(/&amp;/g, "&");
+      handleImageFailure(event, {
+        name: cardName,
+        school: img.dataset.cardSchool || "Balance",
+        type: img.dataset.cardType || "Utility",
+        pips: Number(img.dataset.cardPips || 0)
+      });
+    });
+  });
+
+  root.querySelectorAll("[data-card-quantity]").forEach((element) => {
+    element.addEventListener("click", () => {
+      const [playerId, deckId, cardId, change] = element.getAttribute("data-card-quantity").split("|");
+      changeCardQuantity(playerId, deckId, cardId, Number(change));
+    });
+  });
+}
+
+function refreshPlayerColumn(playerId) {
+  const section = findPlayerById(playerId);
+  const currentColumn = document.querySelector(`[data-player-card="${CSS.escape(playerId)}"]`);
+  if (!section || !currentColumn) return false;
+
+  const template = document.createElement("template");
+  template.innerHTML = renderPlayerColumn(section.team, section.player).trim();
+  const nextColumn = template.content.firstElementChild;
+  currentColumn.replaceWith(nextColumn);
+  bindPlayerColumnEvents(nextColumn);
+  return true;
 }
 
 function render() {
@@ -1089,9 +1269,7 @@ function render() {
   const previousScrollTop = previousMain?.scrollTop || 0;
 
   const normalizedQuery = normalizeText(state.query);
-  const activeCardCatalog = state.selectedDeckId === "extra"
-    ? extraDeckCards
-    : sampleCards;
+  const activeCardCatalog = getCardCatalogForDeck(state.selectedDeckId);
 
   const filteredCards = activeCardCatalog.filter((card) => {
     const categories = getCardCategories(card);
@@ -1278,9 +1456,9 @@ function render() {
   `;
 
   document.getElementById("raid-name-input")?.addEventListener("input", (event) => {
-  state.raidName = event.target.value;
-  scheduleSave();
-});
+    state.raidName = event.target.value;
+    scheduleSave({ raidName: true });
+  });
 
   document.getElementById("copy-link-btn")?.addEventListener("click", copyRaidLink);
   document.getElementById("chat-toggle-btn")?.addEventListener("click", () => {
@@ -1391,20 +1569,6 @@ function render() {
     });
   });
 
-  document.querySelectorAll("[data-player-name]")?.forEach((element) => {
-    element.addEventListener("input", (event) => {
-      const playerId = element.getAttribute("data-player-name");
-      updatePlayerName(playerId, event.target.value);
-    });
-  });
-
-  document.querySelectorAll("[data-cycle-school]")?.forEach((element) => {
-    element.addEventListener("click", () => {
-      const playerId = element.getAttribute("data-cycle-school");
-      cyclePlayerSchool(playerId);
-    });
-  });
-
   document.querySelectorAll("[data-rename-team]")?.forEach((element) => {
     element.addEventListener("click", () => {
       const teamId = element.getAttribute("data-rename-team");
@@ -1419,35 +1583,7 @@ function render() {
     });
   });
 
-  document.querySelectorAll("[data-remove-player]")?.forEach((element) => {
-    element.addEventListener("click", () => {
-      const [teamId, playerId] = element.getAttribute("data-remove-player").split("|");
-      removePlayerFromTeam(teamId, playerId);
-    });
-  });
-
-  document.querySelectorAll("[data-open-picker-player]")?.forEach((element) => {
-    element.addEventListener("click", () => {
-      const [playerId, deckId] = element.getAttribute("data-open-picker-player").split("|");
-      const team = getTeamByPlayerId(playerId);
-      if (team) state.activeTeamId = team.id;
-      state.selectedPlayerId = playerId;
-      state.selectedDeckId = deckId;
-      state.pickerOpen = true;
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-toggle-deck]")?.forEach((element) => {
-    element.addEventListener("click", () => {
-      const [playerId, deckId] = element.getAttribute("data-toggle-deck").split("|");
-      const key = deckExpansionKey(playerId, deckId);
-      state.expandedDecks[key] = !isDeckExpanded(playerId, deckId);
-      render();
-    });
-  });
-
-  document.querySelectorAll("img.spell-image, img.library-image")?.forEach((img) => {
+  document.querySelectorAll("img.library-image")?.forEach((img) => {
     img.addEventListener("error", (event) => {
       const cardName = (img.dataset.cardName || "Unknown spell").replace(/&amp;/g, "&");
       const card = {
@@ -1463,20 +1599,13 @@ function render() {
   document.querySelectorAll("[data-card-id]")?.forEach((element) => {
     element.addEventListener("click", () => {
       const cardId = element.getAttribute("data-card-id");
-      const activeCardCatalog = state.selectedDeckId === "extra"
-        ? extraDeckCards
-        : sampleCards;
+      const activeCardCatalog = getCardCatalogForDeck(state.selectedDeckId);
       const card = activeCardCatalog.find((entry) => entry.id === cardId);
       if (card) addCardToPlayer(card);
     });
   });
 
-  document.querySelectorAll("[data-card-quantity]")?.forEach((element) => {
-    element.addEventListener("click", () => {
-      const [playerId, deckId, cardId, change] = element.getAttribute("data-card-quantity").split("|");
-      changeCardQuantity(playerId, deckId, cardId, Number(change));
-    });
-  });
+  bindPlayerColumnEvents(document);
 
   document.getElementById("chat-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1718,6 +1847,21 @@ function subscribeToMessages() {
   );
 }
 
+function getChatParticipantColor(identity) {
+  let hash = 0;
+  const value = String(identity || "anonymous");
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash * 31) + value.charCodeAt(index)) >>> 0;
+  }
+
+  const hue = hash % 360;
+  return {
+    accent: `hsl(${hue} 85% 75%)`,
+    background: `hsl(${hue} 65% 35% / 0.34)`
+  };
+}
+
 function renderMessages(messages) {
   const container = document.getElementById("chat-messages");
   if (!container) return;
@@ -1725,9 +1869,13 @@ function renderMessages(messages) {
   container.innerHTML = messages
     .map((message) => {
       const mine = message.authorId === currentUser?.uid;
+      const color = getChatParticipantColor(message.authorId || message.authorName);
 
       return `
-        <div class="chat-message ${mine ? "mine" : ""}">
+        <div
+          class="chat-message ${mine ? "mine" : ""}"
+          style="--participant-color:${color.accent}; --participant-background:${color.background};"
+        >
           <strong>${escapeHtml(message.authorName || "Anonymous")}</strong>
           <p>${escapeHtml(message.text || "")}</p>
         </div>
@@ -1736,6 +1884,75 @@ function renderMessages(messages) {
     .join("");
 
   container.scrollTop = container.scrollHeight;
+}
+
+function normalizeSavedTeams(teams) {
+  return teams.map((team) => ({
+    ...team,
+    players: team.players.map(normalizePlayerDecks)
+  }));
+}
+
+function overlayPlayerSections(teams) {
+  return teams.map((team) => ({
+    ...team,
+    players: team.players.map((player) => {
+      if (pendingPlayerIds.has(player.id)) {
+        return findPlayerById(player.id)?.player || player;
+      }
+
+      const section = latestPlayerSections.get(player.id);
+      return section?.player ? normalizePlayerDecks(section.player) : player;
+    })
+  }));
+}
+
+function subscribeToPlayerSections() {
+  if (unsubscribePlayerSections) unsubscribePlayerSections();
+
+  unsubscribePlayerSections = onSnapshot(
+    getPlayerSectionsCollection(),
+    (snapshot) => {
+      const changedPlayerIds = new Set();
+
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "removed") {
+          latestPlayerSections.delete(change.doc.id);
+          return;
+        }
+
+        const section = change.doc.data();
+        latestPlayerSections.set(change.doc.id, section);
+
+        if (pendingPlayerIds.has(change.doc.id)) return;
+
+        const current = findPlayerById(change.doc.id);
+        if (!current || !section.player) return;
+
+        const nextPlayer = normalizePlayerDecks(section.player);
+        if (JSON.stringify(current.player) === JSON.stringify(nextPlayer)) return;
+
+        current.team.players = current.team.players.map((player) =>
+          player.id === change.doc.id ? nextPlayer : player
+        );
+        changedPlayerIds.add(change.doc.id);
+      });
+
+      if (!changedPlayerIds.size) return;
+
+      applyingRemoteState = true;
+      changedPlayerIds.forEach((playerId) => {
+        if (!refreshPlayerColumn(playerId)) render();
+      });
+      applyingRemoteState = false;
+      markChanged();
+      scheduleLiveStatus();
+    },
+    (error) => {
+      console.error("Player section listener failed:", error);
+      setSaveStatus("Connection failed");
+    }
+  );
 }
 
 
@@ -1748,24 +1965,32 @@ function subscribeToRaid() {
     raidDocument,
     async (snapshot) => {
       if (!snapshot.exists()) {
-        await saveStateToFirebase();
+        pendingStructureSave = true;
+        pendingRaidNameSave = true;
+        await saveStateToFirebase({ forceStructure: true });
         return;
       }
 
       const savedRaid = snapshot.data();
+      const nextRaidName = pendingRaidNameSave
+        ? state.raidName
+        : typeof savedRaid.raidName === "string"
+          ? savedRaid.raidName
+          : state.raidName;
+      const nextTeams = pendingStructureSave || !Array.isArray(savedRaid.teams) || !savedRaid.teams.length
+        ? state.teams
+        : overlayPlayerSections(normalizeSavedTeams(savedRaid.teams));
+      const raidChanged = nextRaidName !== state.raidName;
+      const teamsChanged = JSON.stringify(nextTeams) !== JSON.stringify(state.teams);
+
+      if (!raidChanged && !teamsChanged) {
+        scheduleLiveStatus();
+        return;
+      }
 
       applyingRemoteState = true;
-
-      if (typeof savedRaid.raidName === "string") {
-        state.raidName = savedRaid.raidName;
-      }
-
-      if (Array.isArray(savedRaid.teams) && savedRaid.teams.length > 0) {
-        state.teams = savedRaid.teams.map((team) => ({
-          ...team,
-          players: team.players.map(normalizePlayerDecks)
-        }));
-      }
+      state.raidName = nextRaidName;
+      state.teams = nextTeams;
 
       const activeTeamStillExists = state.teams.some(
         (team) => team.id === state.activeTeamId
