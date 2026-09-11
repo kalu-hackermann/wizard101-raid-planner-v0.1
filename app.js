@@ -17,6 +17,8 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -53,6 +55,9 @@ let unsubscribeParticipants = null;
 let presenceInterval = null;
 let latestMessages = [];
 let allParticipants = [];
+let messagesInitialized = false;
+let unreadMessageCount = 0;
+let chatAudioContext = null;
 let liveStatusTimer = null;
 let changeVersion = 0;
 let hasPendingPlannerChanges = false;
@@ -88,6 +93,7 @@ function showWelcomeDialog() {
       const name = input.value.trim().slice(0, 30);
       if (!name) return;
       participantName = name;
+      unlockChatAudio();
       localStorage.setItem("wizard101-participant-name", participantName);
       dialog.remove();
       resolve();
@@ -638,6 +644,9 @@ const state = {
   draggedTeamId: null,
   chatOpen: false,
   chatDraft: "",
+  chatReply: null,
+  importDialog: null,
+  aboutOpen: false,
   selectedDeckId: "main",
   expandedDecks: {}
 };
@@ -1310,6 +1319,8 @@ function render() {
         <div class="top-actions">
           <input class="raid-name" id="raid-name-input" value="${escapeHtml(state.raidName)}" />
           <button class="secondary copy-link-btn" id="copy-link-btn">⧉ Copy raid link</button>
+          <button class="secondary import-decks-btn" id="import-decks-btn">⇩ Import decks</button>
+          <button class="secondary about-btn" id="about-btn">ⓘ About</button>
           <div class="sync-status" aria-live="polite">
             <span id="save-status-dot" class="sync-dot ${saveStatusIsLive ? "live" : ""}"></span>
             <span id="save-status" class="save-status">${escapeHtml(saveStatusText)}</span>
@@ -1368,6 +1379,11 @@ function render() {
         >
           <span aria-hidden="true">${state.chatOpen ? "›" : "‹"}</span>
           <strong>Chat</strong>
+          ${unreadMessageCount > 0 ? `
+            <span class="chat-unread-badge" aria-label="${unreadMessageCount} unread messages">
+              ${unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+            </span>
+          ` : ""}
         </button>
 
         <aside
@@ -1386,6 +1402,14 @@ function render() {
           </div>
 
           <div id="chat-messages" class="chat-messages"></div>
+
+          <div id="chat-reply-preview" class="chat-reply-preview ${state.chatReply ? "" : "hidden"}">
+            <div>
+              <span>Replying to ${escapeHtml(state.chatReply?.authorName || "")}</span>
+              <p>${escapeHtml(state.chatReply?.text || "")}</p>
+            </div>
+            <button type="button" id="cancel-chat-reply" aria-label="Cancel reply">✕</button>
+          </div>
 
           <form id="chat-form" class="chat-form">
             <input
@@ -1452,6 +1476,202 @@ function render() {
           </div>
         </div>
       ` : ""}
+
+      ${state.importDialog ? `
+        <div class="modal-backdrop" id="import-backdrop">
+          <div class="import-dialog" role="dialog" aria-modal="true" aria-labelledby="import-title">
+            <div class="picker-header">
+              <div>
+                <div class="eyebrow">PREVIOUS RAID</div>
+                <h2 id="import-title">Import player decks</h2>
+              </div>
+              <button class="icon-btn" id="close-import-btn" aria-label="Close import">✕</button>
+            </div>
+
+            <p class="import-description">
+              Select the matching players whose Main, Extra, and Treasure Card decks should be copied.
+            </p>
+
+            <form id="import-decks-form">
+              <div class="import-player-list">
+                ${state.importDialog.choices.length
+                  ? state.importDialog.choices.map((choice) => `
+                    <label class="import-player-option">
+                      <input type="checkbox" name="import-player" value="${choice.targetPlayerId}" checked />
+                      <span>
+                        <strong>${escapeHtml(choice.targetPlayerName)}</strong>
+                        <small>${escapeHtml(choice.targetTeamName)} · matched from previous raid</small>
+                      </span>
+                    </label>
+                  `).join("")
+                  : '<div class="no-import-matches">No players in this raid have the same name as players in the previous raid.</div>'
+                }
+              </div>
+
+              <div class="import-actions">
+                <button type="button" class="secondary" id="cancel-import-btn">Cancel</button>
+                <button type="submit" class="primary" ${state.importDialog.choices.length ? "" : "disabled"}>
+                  Import selected
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ` : ""}
+
+      ${state.aboutOpen ? `
+        <div class="about-page" role="dialog" aria-modal="true" aria-labelledby="about-title">
+          <header class="about-header">
+            <div>
+              <div class="eyebrow">WIZARD101 RAID PLANNER</div>
+              <h2 id="about-title">About &amp; beginner guide</h2>
+            </div>
+            <button class="secondary" id="close-about-btn">← Back to planner</button>
+          </header>
+
+          <main class="about-content">
+            <section class="about-hero">
+              <div>
+                <span class="about-kicker">START HERE</span>
+                <h3>Plan a raid together, one deck at a time.</h3>
+                <p>
+                  This planner is a shared room where your group can prepare teams, players and spell decks.
+                  Everyone who opens the same raid link sees the same plan and can work on it together.
+                  You do not need an account: enter a display name when the page opens and you are ready.
+                </p>
+              </div>
+              <ol class="about-steps">
+                <li><strong>Open a raid link.</strong><span>Enter the name your group will recognize.</span></li>
+                <li><strong>Find your player.</strong><span>Choose a school and type the wizard name.</span></li>
+                <li><strong>Build the decks.</strong><span>Expand a deck, add cards and set their quantities.</span></li>
+                <li><strong>Talk with the team.</strong><span>Use Chat to coordinate changes in real time.</span></li>
+              </ol>
+            </section>
+
+            <nav class="about-nav" aria-label="Guide sections">
+              <a href="#guide-layout">Planner layout</a>
+              <a href="#guide-decks">The four decks</a>
+              <a href="#guide-cards">Managing cards</a>
+              <a href="#guide-chat">Chat</a>
+              <a href="#guide-links">Links &amp; import</a>
+              <a href="#guide-saving">Saving</a>
+            </nav>
+
+            <section class="about-section" id="guide-layout">
+              <div class="about-section-heading">
+                <span>01</span>
+                <div><h3>Understanding the planner</h3><p>The screen is divided into a few simple working areas.</p></div>
+              </div>
+              <div class="about-card-grid">
+                <article class="about-card"><h4>Raid name</h4><p>The text box at the top names the current plan. Changing it does not change the raid link or create a new raid.</p></article>
+                <article class="about-card"><h4>Teams</h4><p>The left sidebar lists every team. Select a team to work on it. Use <strong>＋</strong> to add another team, and drag team names to change their order.</p></article>
+                <article class="about-card"><h4>Participants</h4><p>The bottom of the sidebar shows people who currently have this raid open. This is a presence list, not the list of wizards placed in teams.</p></article>
+                <article class="about-card"><h4>Team View</h4><p>This is the main work area. Each team can contain up to four players. Add, rename or remove teams and players with the buttons beside them.</p></article>
+                <article class="about-card"><h4>Player name and school</h4><p>Type directly in a player's name box. Select the round school icon to cycle through the available schools.</p></article>
+                <article class="about-card"><h4>Live indicator</h4><p><strong>Editing…</strong> means a change is waiting to save, <strong>Syncing…</strong> means it is being sent, and the green <strong>Live</strong> status means the shared plan is up to date.</p></article>
+              </div>
+            </section>
+
+            <section class="about-section" id="guide-decks">
+              <div class="about-section-heading">
+                <span>02</span>
+                <div><h3>The four deck sections</h3><p>Every player has four separate card areas with different purposes.</p></div>
+              </div>
+              <div class="deck-guide-grid">
+                <article class="deck-guide main-deck-guide">
+                  <div class="deck-guide-number">1</div><h4>Main Deck</h4>
+                  <p>The regular spells the player plans to carry and use during the raid. This is also the deck the Fusion Deck reads when checking fusion recipes.</p>
+                </article>
+                <article class="deck-guide extra-deck-guide">
+                  <div class="deck-guide-number">2</div><h4>Extra Deck</h4>
+                  <p>A separate collection for special Extra Deck spells. Its Add Card window only shows cards placed in each school's <strong>Extra deck</strong> folder.</p>
+                </article>
+                <article class="deck-guide fusion-deck-guide">
+                  <div class="deck-guide-number">3</div><h4>Fusion Deck</h4>
+                  <p>This deck is automatic, so it has no Add Card button. It examines the Main Deck and displays a fusion spell when all required ingredients are present.</p>
+                  <div class="fusion-example"><span>Ammut</span><b>＋</b><span>Fire Dragon</span><b>→</b><strong>Ammut's Fury</strong></div>
+                </article>
+                <article class="deck-guide treasure-deck-guide">
+                  <div class="deck-guide-number">4</div><h4>Treasure Card Deck</h4>
+                  <p>The player's separate supply of Treasure Cards. Its picker only contains cards from the <strong>TCs</strong> folder for each school.</p>
+                </article>
+              </div>
+              <div class="about-note"><strong>Expand or collapse:</strong> Select a deck's title bar to show or hide its cards. The number at the right of the bar is the total number of card copies in that deck.</div>
+            </section>
+
+            <section class="about-section" id="guide-cards">
+              <div class="about-section-heading">
+                <span>03</span>
+                <div><h3>Adding and managing cards</h3><p>Cards of the same name are grouped together instead of filling the screen with duplicates.</p></div>
+              </div>
+              <div class="about-instructions">
+                <div><b>1</b><p>Expand Main, Extra or Treasure Card Deck and select <strong>＋ Add Card</strong>.</p></div>
+                <div><b>2</b><p>Search by spell name, or narrow the list with the <strong>School</strong> and <strong>Type</strong> menus.</p></div>
+                <div><b>3</b><p>Select a card to add one copy. Use <strong>＋</strong> beside the card to add more copies and <strong>−</strong> to remove them.</p></div>
+                <div><b>4</b><p>The <strong>× number</strong> beside a card is its quantity. When the quantity reaches zero, the card disappears from that deck.</p></div>
+              </div>
+              <p class="about-small">Card types include buffs and debuffs, shields, traps, field spells, damage over time, area-of-effect attacks, single-target attacks and heals.</p>
+            </section>
+
+            <section class="about-section" id="guide-chat">
+              <div class="about-section-heading">
+                <span>04</span>
+                <div><h3>Live chat</h3><p>The Chat tab on the right edge opens the shared discussion for this raid.</p></div>
+              </div>
+              <div class="chat-guide-layout">
+                <div class="chat-example" aria-label="Example chat conversation">
+                  <div class="example-message other"><strong>Simon</strong><p>@Luca_Stellarshade Can you add two traps?</p></div>
+                  <div class="example-message mine"><strong>Luca Stellarshade</strong><p>I added them to the Main Deck.</p></div>
+                  <div class="example-caption">Example conversation</div>
+                </div>
+                <div class="about-card-grid compact">
+                  <article class="about-card"><h4>Unread messages</h4><p>When Chat is closed, the red counter shows how many messages other people sent since you last opened it.</p></article>
+                  <article class="about-card"><h4>Reply</h4><p>Right-click a message balloon to quote and reply to it. Select <strong>✕</strong> above the message box to cancel the reply.</p></article>
+                  <article class="about-card"><h4>Mention someone</h4><p>Type <strong>@name</strong> to notify an active participant with a sound. Replace spaces with underscores: <strong>@Luca_Stellarshade</strong>.</p></article>
+                  <article class="about-card"><h4>Clear the discussion</h4><p>Send <strong>/clear</strong> as the entire message. It hides everything before that command for everyone in the raid.</p></article>
+                </div>
+              </div>
+            </section>
+
+            <section class="about-section" id="guide-links">
+              <div class="about-section-heading">
+                <span>05</span>
+                <div><h3>Raid links and deck import</h3><p>The raid ID inside the address tells the planner which shared room to open.</p></div>
+              </div>
+              <div class="link-guide">
+                <article>
+                  <h4>Copy raid link</h4>
+                  <ol><li>Select <strong>Copy raid link</strong>.</li><li>Send the copied address to your teammates.</li><li>When they open it, they enter a display name and join the same plan.</li></ol>
+                  <p>Do not remove or change the <strong>?raid=...</strong> part of the address. A link without that same raid ID opens a different session.</p>
+                </article>
+                <article>
+                  <h4>Import decks from an older raid</h4>
+                  <ol><li>Copy the link of the previous raid.</li><li>Open the new raid and create or rename its players so their names match the old players.</li><li>Select <strong>Import decks</strong> and paste the previous link.</li><li>Tick one or more matching players, then select <strong>Import selected</strong>.</li></ol>
+                  <p>Matching ignores capital letters, but the player names otherwise need to be the same. Main, Extra and Treasure Card decks are copied. Fusion cards are recalculated automatically. The older raid is not changed.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="about-section" id="guide-saving">
+              <div class="about-section-heading">
+                <span>06</span>
+                <div><h3>Automatic saving and collaboration</h3><p>There is no Save button because planner changes are saved automatically.</p></div>
+              </div>
+              <div class="about-card-grid compact">
+                <article class="about-card"><h4>Automatic sync</h4><p>After you stop editing briefly, your changes are sent to Firebase. You can continue planning while this happens.</p></article>
+                <article class="about-card"><h4>Individual player updates</h4><p>Deck edits are synchronized for the affected player section, reducing unnecessary updates for teammates working elsewhere.</p></article>
+                <article class="about-card"><h4>Returning later</h4><p>Use the same raid link to return to the saved plan. A different raid ID represents a different shared session.</p></article>
+                <article class="about-card"><h4>If saving fails</h4><p>Check the internet connection and keep the page open. Avoid refreshing until the status reconnects and returns to <strong>Live</strong>.</p></article>
+              </div>
+            </section>
+
+            <section class="about-finish">
+              <div><span class="about-kicker">READY TO PLAN</span><h3>Return to your raid and build the team.</h3></div>
+              <button class="primary" id="finish-about-btn">Back to planner</button>
+            </section>
+          </main>
+        </div>
+      ` : ""}
     </div>
   `;
 
@@ -1461,13 +1681,30 @@ function render() {
   });
 
   document.getElementById("copy-link-btn")?.addEventListener("click", copyRaidLink);
+  document.getElementById("import-decks-btn")?.addEventListener("click", beginDeckImport);
+  document.getElementById("about-btn")?.addEventListener("click", () => {
+    state.aboutOpen = true;
+    render();
+  });
+  const closeAboutPage = () => {
+    state.aboutOpen = false;
+    render();
+  };
+  document.getElementById("close-about-btn")?.addEventListener("click", closeAboutPage);
+  document.getElementById("finish-about-btn")?.addEventListener("click", closeAboutPage);
   document.getElementById("chat-toggle-btn")?.addEventListener("click", () => {
     state.chatOpen = !state.chatOpen;
+    if (state.chatOpen) markChatAsSeen();
     render();
   });
   document.getElementById("close-chat-btn")?.addEventListener("click", () => {
     state.chatOpen = false;
     render();
+  });
+  document.getElementById("cancel-chat-reply")?.addEventListener("click", () => {
+    state.chatReply = null;
+    renderChatReplyPreview();
+    document.getElementById("chat-input")?.focus();
   });
   document.getElementById("add-team-btn")?.addEventListener("click", addTeam);
   document.getElementById("open-picker-btn")?.addEventListener("click", () => {
@@ -1485,6 +1722,23 @@ function render() {
       state.pickerOpen = false;
       render();
     }
+  });
+
+  const closeImportDialog = () => {
+    state.importDialog = null;
+    render();
+  };
+  document.getElementById("close-import-btn")?.addEventListener("click", closeImportDialog);
+  document.getElementById("cancel-import-btn")?.addEventListener("click", closeImportDialog);
+  document.getElementById("import-backdrop")?.addEventListener("click", (event) => {
+    if (event.target.id === "import-backdrop") closeImportDialog();
+  });
+  document.getElementById("import-decks-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const selectedPlayerIds = [...event.currentTarget.querySelectorAll(
+      'input[name="import-player"]:checked'
+    )].map((input) => input.value);
+    importSelectedDecks(selectedPlayerIds);
   });
 
   document.getElementById("card-search")?.addEventListener("input", (event) => {
@@ -1619,6 +1873,8 @@ function render() {
 
     try {
       await sendChatMessage(message);
+      state.chatReply = null;
+      renderChatReplyPreview();
     } catch (error) {
       console.error("Message could not be sent:", error);
       input.value = message;
@@ -1651,6 +1907,8 @@ document.addEventListener("input", registerUserActivity, true);
 document.addEventListener("change", registerUserActivity, true);
 document.addEventListener("pointerdown", registerUserActivity, true);
 document.addEventListener("keydown", registerUserActivity, true);
+document.addEventListener("pointerdown", unlockChatAudio, { capture: true, once: true });
+document.addEventListener("keydown", unlockChatAudio, { capture: true, once: true });
 
 function getMessagesCollection() {
   return collection(db, "raids", raidId, "messages");
@@ -1672,6 +1930,163 @@ async function copyRaidLink() {
   window.setTimeout(() => {
     if (button?.isConnected) button.textContent = "⧉ Copy raid link";
   }, 1800);
+}
+
+function extractRaidId(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+
+  try {
+    const url = new URL(trimmed);
+    return url.searchParams.get("raid")?.trim() || "";
+  } catch {
+    return /^[a-zA-Z0-9_-]+$/.test(trimmed) ? trimmed : "";
+  }
+}
+
+function normalizePlayerNameForMatch(value) {
+  return String(value || "").trim().toLocaleLowerCase().replace(/\s+/g, " ");
+}
+
+async function loadPreviousRaidPlayers(sourceRaidId) {
+  const sourceRaidReference = doc(db, "raids", sourceRaidId);
+  const sourceRaidSnapshot = await getDoc(sourceRaidReference);
+  if (!sourceRaidSnapshot.exists()) {
+    throw new Error("The previous raid could not be found.");
+  }
+
+  const sourceRaid = sourceRaidSnapshot.data();
+  const sourceTeams = Array.isArray(sourceRaid.teams)
+    ? normalizeSavedTeams(sourceRaid.teams)
+    : [];
+  const sectionSnapshot = await getDocs(
+    collection(db, "raids", sourceRaidId, "playerSections")
+  );
+  const sourceSections = new Map(
+    sectionSnapshot.docs.map((sectionDocument) => [
+      sectionDocument.id,
+      sectionDocument.data().player
+    ])
+  );
+
+  return sourceTeams.flatMap((team) =>
+    team.players.map((player) =>
+      sourceSections.has(player.id)
+        ? normalizePlayerDecks(sourceSections.get(player.id))
+        : player
+    )
+  );
+}
+
+async function beginDeckImport() {
+  const sourceValue = window.prompt(
+    "Paste the raid link from the previous session:"
+  );
+  if (sourceValue === null) return;
+
+  const sourceRaidId = extractRaidId(sourceValue);
+  if (!sourceRaidId) {
+    window.alert("That is not a valid raid link.");
+    return;
+  }
+  if (sourceRaidId === raidId) {
+    window.alert("Choose a different raid. This is the current raid.");
+    return;
+  }
+
+  const button = document.getElementById("import-decks-btn");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Loading…";
+  }
+
+  try {
+    const sourcePlayers = await loadPreviousRaidPlayers(sourceRaidId);
+    const sourcePlayersByName = new Map();
+
+    sourcePlayers.forEach((player) => {
+      const key = normalizePlayerNameForMatch(player.name);
+      if (key && !sourcePlayersByName.has(key)) {
+        sourcePlayersByName.set(key, player);
+      }
+    });
+
+    const choices = state.teams.flatMap((team) =>
+      team.players
+        .map((targetPlayer) => ({
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          targetTeamName: team.name,
+          sourcePlayer: sourcePlayersByName.get(
+            normalizePlayerNameForMatch(targetPlayer.name)
+          )
+        }))
+        .filter((choice) => Boolean(choice.sourcePlayer))
+    );
+
+    state.importDialog = {
+      sourceRaidId,
+      choices
+    };
+    render();
+  } catch (error) {
+    console.error("Deck import failed:", error);
+    window.alert(error.message || "The previous raid could not be loaded.");
+    if (button?.isConnected) {
+      button.disabled = false;
+      button.textContent = "⇩ Import decks";
+    }
+  }
+}
+
+function cloneImportedDecks(sourcePlayer) {
+  const sourceDecks = normalizePlayerDecks(sourcePlayer).decks;
+  const cloneEntries = (entries) =>
+    JSON.parse(JSON.stringify(Array.isArray(entries) ? entries : []));
+
+  return {
+    main: cloneEntries(sourceDecks.main),
+    extra: cloneEntries(sourceDecks.extra),
+    fusion: [],
+    treasure: cloneEntries(sourceDecks.treasure)
+  };
+}
+
+function importSelectedDecks(selectedPlayerIds) {
+  const importDialog = state.importDialog;
+  if (!importDialog) return;
+
+  const selectedIds = new Set(selectedPlayerIds);
+  const selectedChoices = importDialog.choices.filter((choice) =>
+    selectedIds.has(choice.targetPlayerId)
+  );
+  if (!selectedChoices.length) {
+    window.alert("Select at least one matching player.");
+    return;
+  }
+
+  const choicesByPlayerId = new Map(
+    selectedChoices.map((choice) => [choice.targetPlayerId, choice])
+  );
+
+  state.teams = state.teams.map((team) => ({
+    ...team,
+    players: team.players.map((player) => {
+      const choice = choicesByPlayerId.get(player.id);
+      return choice
+        ? { ...player, decks: cloneImportedDecks(choice.sourcePlayer) }
+        : player;
+    })
+  }));
+
+  state.importDialog = null;
+  render();
+  selectedChoices.forEach((choice) =>
+    scheduleSave({ playerId: choice.targetPlayerId })
+  );
+  window.alert(
+    `Imported decks for ${selectedChoices.length} player${selectedChoices.length === 1 ? "" : "s"}.`
+  );
 }
 
 function participantsCollection() {
@@ -1757,13 +2172,9 @@ document.addEventListener("pointerup", (event) => {
   if (button) requestAnimationFrame(() => button.blur());
 });
 
-function renderParticipants() {
-  const list = document.getElementById("participant-list");
-  if (!list) return;
-
+function getOnlineParticipants() {
   const onlineLimit = Date.now() - 45000;
-
-  const onlineParticipants = allParticipants.filter((participant) => {
+  return allParticipants.filter((participant) => {
     if (participant.uid === currentUser?.uid) {
       return true;
     }
@@ -1772,6 +2183,13 @@ function renderParticipants() {
 
     return typeof lastSeen === "number" && lastSeen >= onlineLimit;
   });
+}
+
+function renderParticipants() {
+  const list = document.getElementById("participant-list");
+  if (!list) return;
+
+  const onlineParticipants = getOnlineParticipants();
 
   const participantMarkup = (participant) => `
     <div class="participant online">
@@ -1805,41 +2223,210 @@ function renderParticipants() {
   `;
 }
 
-async function sendChatMessage(text) {
-  const normalizedText = text.trim();
+function unlockChatAudio() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
 
-  if (!currentUser || !normalizedText) {
-    return;
+  if (!chatAudioContext) chatAudioContext = new AudioContextClass();
+  if (chatAudioContext.state === "suspended") {
+    chatAudioContext.resume().catch(() => {});
   }
+}
 
-  await addDoc(getMessagesCollection(), {
-    text: normalizedText.slice(0, 500),
-    authorId: currentUser.uid,
-    authorName: participantName,
-    createdAt: serverTimestamp()
+function playMentionPing() {
+  unlockChatAudio();
+  if (!chatAudioContext || chatAudioContext.state !== "running") return;
+
+  const now = chatAudioContext.currentTime;
+  const gain = chatAudioContext.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+  gain.connect(chatAudioContext.destination);
+
+  [880, 1175].forEach((frequency, index) => {
+    const oscillator = chatAudioContext.createOscillator();
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency;
+    oscillator.connect(gain);
+    oscillator.start(now + (index * 0.1));
+    oscillator.stop(now + 0.22 + (index * 0.1));
   });
 }
 
-function subscribeToMessages() {
-  if (unsubscribeMessages) {
-    unsubscribeMessages();
+function getMentionedParticipantIds(text) {
+  const mentionAliases = new Set(
+    [...String(text).matchAll(/@([a-zA-Z0-9_]+)/g)]
+      .map((match) => match[1].toLocaleLowerCase())
+  );
+  if (!mentionAliases.size) return [];
+
+  return getOnlineParticipants()
+    .filter((participant) => {
+      const alias = String(participant.name || "")
+        .trim()
+        .toLocaleLowerCase()
+        .replace(/\s+/g, "_");
+      return mentionAliases.has(alias);
+    })
+    .map((participant) => participant.uid)
+    .filter((uid) => uid && uid !== currentUser?.uid);
+}
+
+async function sendChatMessage(text) {
+  const normalizedText = text.trim();
+  if (!currentUser || !normalizedText) return;
+
+  const isClearCommand = normalizedText.toLocaleLowerCase() === "/clear";
+  const recipientIds = isClearCommand
+    ? []
+    : getMentionedParticipantIds(normalizedText);
+
+  if (
+    !isClearCommand &&
+    state.chatReply?.authorId &&
+    state.chatReply.authorId !== currentUser.uid
+  ) {
+    recipientIds.push(state.chatReply.authorId);
   }
+
+  const message = {
+    type: isClearCommand ? "clear" : "message",
+    text: normalizedText.slice(0, 500),
+    authorId: currentUser.uid,
+    authorName: participantName,
+    recipientIds: [...new Set(recipientIds)],
+    createdAt: serverTimestamp()
+  };
+
+  if (!isClearCommand && state.chatReply) {
+    message.replyTo = {
+      messageId: state.chatReply.messageId,
+      authorId: state.chatReply.authorId,
+      authorName: state.chatReply.authorName,
+      text: state.chatReply.text.slice(0, 160)
+    };
+  }
+
+  await addDoc(getMessagesCollection(), message);
+}
+
+function chatLastSeenStorageKey() {
+  return `wizard101-chat-last-seen-${raidId}-${currentUser?.uid || "guest"}`;
+}
+
+function getMessagesAfterLastClear(messages) {
+  let lastClearIndex = -1;
+  messages.forEach((message, index) => {
+    if (
+      message.type === "clear" ||
+      String(message.text || "").trim().toLocaleLowerCase() === "/clear"
+    ) {
+      lastClearIndex = index;
+    }
+  });
+  return lastClearIndex >= 0 ? messages.slice(lastClearIndex) : messages;
+}
+
+function updateChatUnreadBadge() {
+  const button = document.getElementById("chat-toggle-btn");
+  if (!button) return;
+
+  let badge = button.querySelector(".chat-unread-badge");
+  if (unreadMessageCount <= 0) {
+    badge?.remove();
+    return;
+  }
+
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "chat-unread-badge";
+    button.appendChild(badge);
+  }
+  badge.textContent = unreadMessageCount > 99 ? "99+" : String(unreadMessageCount);
+  badge.setAttribute("aria-label", `${unreadMessageCount} unread messages`);
+}
+
+function markChatAsSeen() {
+  const visibleMessages = getMessagesAfterLastClear(latestMessages);
+  const lastMessage = visibleMessages[visibleMessages.length - 1];
+  if (lastMessage && currentUser) {
+    localStorage.setItem(chatLastSeenStorageKey(), lastMessage.id);
+  }
+  unreadMessageCount = 0;
+  updateChatUnreadBadge();
+}
+
+function calculateUnreadMessages() {
+  if (state.chatOpen) {
+    markChatAsSeen();
+    return;
+  }
+
+  const visibleMessages = getMessagesAfterLastClear(latestMessages);
+  const lastSeenMessageId = currentUser
+    ? localStorage.getItem(chatLastSeenStorageKey())
+    : "";
+
+  if (!messagesInitialized && !lastSeenMessageId) {
+    const lastMessage = visibleMessages[visibleMessages.length - 1];
+    if (lastMessage && currentUser) {
+      localStorage.setItem(chatLastSeenStorageKey(), lastMessage.id);
+    }
+    unreadMessageCount = 0;
+    return;
+  }
+
+  const lastSeenIndex = visibleMessages.findIndex(
+    (message) => message.id === lastSeenMessageId
+  );
+  const messagesSinceLastSeen = lastSeenIndex >= 0
+    ? visibleMessages.slice(lastSeenIndex + 1)
+    : visibleMessages;
+
+  unreadMessageCount = messagesSinceLastSeen.filter((message) =>
+    message.type !== "clear" && message.authorId !== currentUser?.uid
+  ).length;
+  updateChatUnreadBadge();
+}
+
+function subscribeToMessages() {
+  if (unsubscribeMessages) unsubscribeMessages();
 
   const messagesQuery = query(
     getMessagesCollection(),
-    orderBy("createdAt", "asc"),
+    orderBy("createdAt", "desc"),
     limit(100)
   );
 
   unsubscribeMessages = onSnapshot(
     messagesQuery,
     (snapshot) => {
-      latestMessages = snapshot.docs.map((messageDocument) => ({
-        id: messageDocument.id,
-        ...messageDocument.data()
-      }));
+      const addedMessages = snapshot.docChanges()
+        .filter((change) => change.type === "added")
+        .map((change) => ({ id: change.doc.id, ...change.doc.data() }));
 
+      latestMessages = snapshot.docs
+        .map((messageDocument) => ({
+          id: messageDocument.id,
+          ...messageDocument.data()
+        }))
+        .reverse();
+
+      if (messagesInitialized && currentUser) {
+        const pinged = addedMessages.some((message) =>
+          message.authorId !== currentUser.uid &&
+          (
+            message.recipientIds?.includes?.(currentUser.uid) ||
+            message.replyTo?.authorId === currentUser.uid
+          )
+        );
+        if (pinged) playMentionPing();
+      }
+
+      calculateUnreadMessages();
       renderMessages(latestMessages);
+      messagesInitialized = true;
     },
     (error) => {
       console.error("Chat listener failed:", error);
@@ -1866,16 +2453,33 @@ function renderMessages(messages) {
   const container = document.getElementById("chat-messages");
   if (!container) return;
 
-  container.innerHTML = messages
+  const visibleMessages = getMessagesAfterLastClear(messages);
+
+  container.innerHTML = visibleMessages
     .map((message) => {
+      if (message.type === "clear" || String(message.text || "").trim().toLocaleLowerCase() === "/clear") {
+        return `
+          <div class="chat-clear-marker">
+            Chat cleared by ${escapeHtml(message.authorName || "Anonymous")}
+          </div>
+        `;
+      }
+
       const mine = message.authorId === currentUser?.uid;
       const color = getChatParticipantColor(message.authorId || message.authorName);
 
       return `
         <div
           class="chat-message ${mine ? "mine" : ""}"
+          data-message-id="${message.id}"
           style="--participant-color:${color.accent}; --participant-background:${color.background};"
         >
+          ${message.replyTo ? `
+            <div class="chat-reply-quote">
+              <strong>${escapeHtml(message.replyTo.authorName || "Anonymous")}</strong>
+              <span>${escapeHtml(message.replyTo.text || "")}</span>
+            </div>
+          ` : ""}
           <strong>${escapeHtml(message.authorName || "Anonymous")}</strong>
           <p>${escapeHtml(message.text || "")}</p>
         </div>
@@ -1883,7 +2487,41 @@ function renderMessages(messages) {
     })
     .join("");
 
+  container.querySelectorAll("[data-message-id]").forEach((messageElement) => {
+    messageElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      const message = visibleMessages.find(
+        (entry) => entry.id === messageElement.dataset.messageId
+      );
+      if (!message) return;
+
+      state.chatReply = {
+        messageId: message.id,
+        authorId: message.authorId,
+        authorName: message.authorName || "Anonymous",
+        text: message.text || ""
+      };
+      renderChatReplyPreview();
+      document.getElementById("chat-input")?.focus();
+    });
+  });
+
+  if (state.chatOpen) markChatAsSeen();
   container.scrollTop = container.scrollHeight;
+}
+
+function renderChatReplyPreview() {
+  const preview = document.getElementById("chat-reply-preview");
+  if (!preview) return;
+
+  if (!state.chatReply) {
+    preview.classList.add("hidden");
+    return;
+  }
+
+  preview.classList.remove("hidden");
+  preview.querySelector("span").textContent = `Replying to ${state.chatReply.authorName}`;
+  preview.querySelector("p").textContent = state.chatReply.text;
 }
 
 function normalizeSavedTeams(teams) {
