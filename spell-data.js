@@ -316,6 +316,7 @@ export const offlineSchoolSpellNames = {
     "Pluto's Peril",
     "Ship of Fools",
     "Ship of Fools B",
+    "Ship of Fools C",
     "Deathblade",
     "Death Prism",
     "Sacrifice",
