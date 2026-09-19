@@ -1379,10 +1379,12 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Keen Eyes",
     "Potent Trap",
     "Sharpened Blade",
+    "Sun Trap",
     "Unstoppable"
   ],
   Star:  [
     "Amplify",
+    "Attenuate",
     "Berserk",
     "Brace",
     "Chastisement",
@@ -1402,7 +1404,14 @@ export const offlineSchoolSpellNamesExtraDeck = {
     "Renew",
     "Sleet Storm",
     "Vengeance",
-    "Virulence"
+    "Virulence",
+    "Fire Attenuate",
+    "Ice Attenuate",
+    "Storm Attenuate",
+    "Death Attenuate",
+    "Life Attenuate",
+    "Myth Attenuate",
+    "Balance Attenuate"
   ],
   Moon:  [
     "Shift Dread Paladin",
