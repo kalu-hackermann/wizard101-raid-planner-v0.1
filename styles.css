@@ -509,17 +509,113 @@ h2 {
   gap: 12px;
 }
 .player-column {
+  position: relative;
   background: rgba(13, 19, 27, 0.86);
   border: 1px solid #2a3647;
   border-radius: 14px;
   padding: 12px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+.player-column.dragging-player {
+  opacity: 0.46;
+  border-style: dashed;
+}
+.player-column.swap-target {
+  border-color: #c69cff;
+  box-shadow: 0 0 0 2px rgba(154, 110, 230, 0.32), 0 0 28px rgba(118, 84, 205, 0.2);
+  transform: translateY(-2px);
+}
+.player-column.swap-target::after {
+  content: "Swap players";
+  position: absolute;
+  z-index: 5;
+  top: 8px;
+  right: 8px;
+  padding: 5px 8px;
+  border: 1px solid rgba(211, 184, 255, 0.56);
+  border-radius: 999px;
+  background: #352653;
+  color: #eadcff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  pointer-events: none;
 }
 .player-editor {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 28px;
+  grid-template-columns: 26px 40px minmax(0, 1fr) 28px;
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
+}
+.player-drag-handle {
+  width: 26px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #708198;
+  font-size: 19px;
+  line-height: 1;
+  cursor: grab;
+}
+.player-drag-handle:hover,
+.player-drag-handle:focus-visible {
+  border-color: #40516b;
+  background: #1a2433;
+  color: #c5d5eb;
+  outline: none;
+}
+.player-drag-handle:active {
+  cursor: grabbing;
+}
+.empty-player-slot {
+  min-height: 150px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 5px;
+  padding: 18px;
+  border: 1px dashed #34445b;
+  border-radius: 14px;
+  background: rgba(13, 19, 27, 0.44);
+  color: #8b9ab0;
+  text-align: center;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.empty-player-slot > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 3px;
+  border-radius: 50%;
+  background: #1d293a;
+  color: #9bb9e2;
+  font-size: 19px;
+}
+.empty-player-slot strong {
+  color: #b7c5d9;
+  font-size: 12px;
+}
+.empty-player-slot small {
+  color: #6f8098;
+  font-size: 10px;
+}
+.empty-player-slot:hover,
+.empty-player-slot:focus-visible {
+  border-color: #526a8d;
+  background: rgba(29, 41, 58, 0.62);
+  outline: none;
+}
+.empty-player-slot.move-target {
+  border-color: #74a8ff;
+  background: rgba(70, 111, 181, 0.2);
+  box-shadow: 0 0 0 2px rgba(116, 168, 255, 0.24), 0 0 28px rgba(77, 122, 202, 0.18);
+  transform: translateY(-2px);
 }
 .school-icon {
   width: 40px;

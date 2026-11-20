@@ -642,6 +642,7 @@ const state = {
   school: "All",
   type: "All",
   draggedTeamId: null,
+  draggedPlayerId: null,
   chatOpen: false,
   chatDraft: "",
   chatReply: null,
@@ -763,14 +764,15 @@ async function saveStateToFirebase({ forceStructure = false } = {}) {
   }
 }
 
-function scheduleSave({ playerId = null, raidName = false, structure = false } = {}) {
+function scheduleSave({ playerId = null, playerIds = [], raidName = false, structure = false } = {}) {
   if (!firebaseReady || applyingRemoteState) {
     return;
   }
 
   if (playerId) pendingPlayerIds.add(playerId);
+  playerIds.forEach((id) => pendingPlayerIds.add(id));
   if (raidName) pendingRaidNameSave = true;
-  if (structure || (!playerId && !raidName)) pendingStructureSave = true;
+  if (structure || (!playerId && !playerIds.length && !raidName)) pendingStructureSave = true;
 
   hasPendingPlannerChanges = true;
   pendingSaveGeneration += 1;
@@ -845,6 +847,47 @@ function reorderTeams(draggedTeamId, targetTeamId) {
 
   render();
   scheduleSave();
+}
+
+function clearPlayerDragIndicators() {
+  document.querySelectorAll(".player-column.dragging-player, .player-column.swap-target, .empty-player-slot.move-target")
+    .forEach((element) => {
+      element.classList.remove("dragging-player", "swap-target", "move-target");
+    });
+}
+
+function moveOrSwapPlayer(draggedPlayerId, targetTeamId, targetPlayerId = null) {
+  if (!draggedPlayerId || !targetTeamId || draggedPlayerId === targetPlayerId) return;
+
+  const sourceTeam = getTeamByPlayerId(draggedPlayerId);
+  const targetTeam = state.teams.find((team) => team.id === targetTeamId);
+  if (!sourceTeam || !targetTeam) return;
+
+  const sourceIndex = sourceTeam.players.findIndex((player) => player.id === draggedPlayerId);
+  if (sourceIndex === -1) return;
+
+  const draggedPlayer = sourceTeam.players[sourceIndex];
+  const affectedPlayerIds = [draggedPlayer.id];
+
+  if (targetPlayerId) {
+    const targetIndex = targetTeam.players.findIndex((player) => player.id === targetPlayerId);
+    if (targetIndex === -1) return;
+
+    const targetPlayer = targetTeam.players[targetIndex];
+    sourceTeam.players[sourceIndex] = targetPlayer;
+    targetTeam.players[targetIndex] = draggedPlayer;
+    affectedPlayerIds.push(targetPlayer.id);
+  } else {
+    if (sourceTeam.id === targetTeam.id || targetTeam.players.length >= 4) return;
+    sourceTeam.players.splice(sourceIndex, 1);
+    targetTeam.players.push(draggedPlayer);
+  }
+
+  state.activeTeamId = targetTeam.id;
+  state.selectedPlayerId = draggedPlayer.id;
+  state.draggedPlayerId = null;
+  render();
+  scheduleSave({ structure: true, playerIds: affectedPlayerIds });
 }
 
 function getNextAvailableTeamNumber() {
@@ -1165,6 +1208,14 @@ function renderPlayerColumn(team, player) {
   return `
     <div class="player-column" data-player-card="${player.id}">
       <div class="player-editor">
+        <button
+          class="player-drag-handle"
+          type="button"
+          draggable="true"
+          data-drag-player="${player.id}"
+          aria-label="Move ${escapeHtml(player.name)} to another player slot"
+          title="Drag to move or swap this player"
+        >⠿</button>
         <button class="school-icon" type="button" data-cycle-school="${player.id}" aria-label="Change ${escapeHtml(player.name)} school">
           <img src="${getSchoolLogoSvg(player.school)}" alt="${player.school}" />
         </button>
@@ -1180,6 +1231,22 @@ function renderPlayerColumn(team, player) {
 }
 
 function renderTeamCard(team) {
+  const emptySlots = Array.from(
+    { length: Math.max(0, 4 - team.players.length) },
+    () => `
+      <button
+        class="empty-player-slot"
+        type="button"
+        data-empty-player-slot="${team.id}"
+        aria-label="Empty player slot in ${escapeHtml(team.name)}"
+      >
+        <span>＋</span>
+        <strong>Empty player slot</strong>
+        <small>Drop a player here</small>
+      </button>
+    `
+  ).join("");
+
   return `
     <section class="team-panel ${team.id === state.activeTeamId ? "active" : ""}">
       <div class="team-panel-header">
@@ -1193,12 +1260,87 @@ function renderTeamCard(team) {
 
       <div class="team-player-grid">
         ${team.players.map((player) => renderPlayerColumn(team, player)).join("")}
+        ${emptySlots}
       </div>
     </section>
   `;
 }
 
 function bindPlayerColumnEvents(root = document) {
+  root.querySelectorAll("[data-drag-player]").forEach((handle) => {
+    handle.addEventListener("dragstart", (event) => {
+      const playerId = handle.getAttribute("data-drag-player");
+      state.draggedPlayerId = playerId;
+      handle.closest(".player-column")?.classList.add("dragging-player");
+
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("application/x-wizard101-player", playerId);
+        event.dataTransfer.setData("text/plain", playerId);
+      }
+    });
+
+    handle.addEventListener("dragend", () => {
+      state.draggedPlayerId = null;
+      clearPlayerDragIndicators();
+    });
+  });
+
+  const playerColumns = [...root.querySelectorAll("[data-player-card]")];
+  if (root instanceof Element && root.matches("[data-player-card]")) playerColumns.unshift(root);
+
+  playerColumns.forEach((column) => {
+    column.addEventListener("dragover", (event) => {
+      const targetPlayerId = column.getAttribute("data-player-card");
+      if (!state.draggedPlayerId || state.draggedPlayerId === targetPlayerId) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      column.classList.add("swap-target");
+    });
+
+    column.addEventListener("dragleave", (event) => {
+      if (!column.contains(event.relatedTarget)) column.classList.remove("swap-target");
+    });
+
+    column.addEventListener("drop", (event) => {
+      if (!state.draggedPlayerId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const draggedPlayerId = state.draggedPlayerId;
+      const targetPlayerId = column.getAttribute("data-player-card");
+      const targetTeam = getTeamByPlayerId(targetPlayerId);
+      clearPlayerDragIndicators();
+      if (targetTeam) moveOrSwapPlayer(draggedPlayerId, targetTeam.id, targetPlayerId);
+    });
+  });
+
+  root.querySelectorAll("[data-empty-player-slot]").forEach((slot) => {
+    slot.addEventListener("click", () => {
+      if (!state.draggedPlayerId) addPlayerToTeam(slot.getAttribute("data-empty-player-slot"));
+    });
+
+    slot.addEventListener("dragover", (event) => {
+      if (!state.draggedPlayerId) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      slot.classList.add("move-target");
+    });
+
+    slot.addEventListener("dragleave", (event) => {
+      if (!slot.contains(event.relatedTarget)) slot.classList.remove("move-target");
+    });
+
+    slot.addEventListener("drop", (event) => {
+      if (!state.draggedPlayerId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const draggedPlayerId = state.draggedPlayerId;
+      const targetTeamId = slot.getAttribute("data-empty-player-slot");
+      clearPlayerDragIndicators();
+      moveOrSwapPlayer(draggedPlayerId, targetTeamId);
+    });
+  });
+
   root.querySelectorAll("[data-player-name]").forEach((element) => {
     element.addEventListener("input", (event) => {
       const playerId = element.getAttribute("data-player-name");
@@ -1566,7 +1708,7 @@ function render() {
                 <article class="about-card"><h4>Raid name</h4><p>The text box at the top names the current plan. Changing it does not change the raid link or create a new raid.</p></article>
                 <article class="about-card"><h4>Teams</h4><p>The left sidebar lists every team. Select a team to work on it. Use <strong>＋</strong> to add another team, and drag team names to change their order.</p></article>
                 <article class="about-card"><h4>Participants</h4><p>The bottom of the sidebar shows people who currently have this raid open. This is a presence list, not the list of wizards placed in teams.</p></article>
-                <article class="about-card"><h4>Team View</h4><p>This is the main work area. Each team can contain up to four players. Add, rename or remove teams and players with the buttons beside them.</p></article>
+                <article class="about-card"><h4>Team View</h4><p>This is the main work area. Each team can contain up to four players. Drag the <strong>⠿</strong> handle onto an empty slot to move a player's complete setup, or onto another player to swap their positions.</p></article>
                 <article class="about-card"><h4>Player name and school</h4><p>Type directly in a player's name box. Select the round school icon to cycle through the available schools.</p></article>
                 <article class="about-card"><h4>Live indicator</h4><p><strong>Editing…</strong> means a change is waiting to save, <strong>Syncing…</strong> means it is being sent, and the green <strong>Live</strong> status means the shared plan is up to date.</p></article>
               </div>
